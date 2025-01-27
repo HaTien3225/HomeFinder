@@ -3,7 +3,8 @@ import MyStyles from "../../styles/MyStyles";
 import React from 'react';
 import APIs, { endpoints } from "../../configs/APIs";
 import { Chip, Searchbar } from "react-native-paper";
-import RoomItem from "./RoomItem"; // Component hiển thị mỗi phòng trọ
+import RoomItem from "./RoomItem"; // Đảm bảo tên file và import đúng
+import RoomItem from '../components/RoomItem'; // Nếu RoomItem.js ở thư mục con
 
 const Home = () => {
     const [categories, setCategories] = React.useState([]);  // Danh mục các loại phòng trọ
@@ -15,9 +16,13 @@ const Home = () => {
 
     // Tải danh mục phòng trọ (ví dụ: phòng trọ sinh viên, phòng trọ giá rẻ...)
     const loadCates = async () => {
-        let res = await APIs.get(endpoints['categories']);
-        setCategories(res.data);
-    }
+        try {
+            let res = await APIs.get(endpoints['categories']);
+            setCategories(res.data);
+        } catch (error) {
+            console.error("Error loading categories:", error);
+        }
+    };
 
     // Tải danh sách phòng trọ theo các bộ lọc
     const loadRooms = async () => {
@@ -26,64 +31,62 @@ const Home = () => {
 
             try {
                 let url = `${endpoints['rooms']}?page=${page}`;
-
                 if (cateId || q) 
-                    url = `${url}&category_id=${cateId}&q=${q}`;  // Nếu có bộ lọc theo danh mục hoặc từ khóa
+                    url += `&category_id=${cateId}&q=${q}`;
 
                 let res = await APIs.get(url);
                 if (page > 1) 
-                    setRooms([...rooms, ...res.data.results]);  // Nối thêm dữ liệu cũ
+                    setRooms((prevRooms) => [...prevRooms, ...res.data.results]);
                 else 
-                    setRooms(res.data.results);  // Lấy dữ liệu mới từ đầu
+                    setRooms(res.data.results);
 
-                if (res.data.next === null) 
-                    setPage(0);  // Nếu không còn trang tiếp theo
+                if (!res.data.next) 
+                    setPage(0);
             } catch (ex) {
-                console.error(ex);
+                console.error("Error loading rooms:", ex);
             } finally {
                 setLoading(false);
             }
         }
-    }
+    };
 
     // Tải lại dữ liệu khi các tham số thay đổi (category, page, search)
     React.useEffect(() => {
-        loadCates();  // Tải danh mục ngay khi màn hình load
+        loadCates();
     }, []);
 
     React.useEffect(() => {
-        let timer = setTimeout(() => loadRooms(), 500);  // Delay nhẹ để tránh gọi quá nhanh
-
+        let timer = setTimeout(() => loadRooms(), 500);
         return () => clearTimeout(timer);
-    }, [cateId, page, q]);  // Khi các tham số thay đổi thì sẽ gọi lại hàm loadRooms
+    }, [cateId, page, q]);
 
     // Tải thêm dữ liệu khi người dùng kéo xuống
     const loadMore = () => {
         if (page > 0 && !loading) 
-            setPage(page + 1);
-    }
+            setPage((prevPage) => prevPage + 1);
+    };
 
     // Chức năng tìm kiếm theo từ khóa hoặc danh mục
     const search = (value, callback) => {
-        setPage(1);  // Reset trang khi thay đổi tìm kiếm
-        callback(value);  // Thực hiện tìm kiếm
-    }
+        setPage(1);
+        callback(value);
+    };
 
     // Refresh lại dữ liệu
     const refresh = () => {
         setPage(1);
         loadRooms();
-    }
+    };
 
     return (
         <View style={[MyStyles.container, MyStyles.margin]}>
             <View style={MyStyles.row}>
-                <TouchableOpacity onPress={() => search("", setCateId)} >
+                <TouchableOpacity onPress={() => search("", setCateId)}>
                     <Chip style={MyStyles.margin} icon="label">Tất cả</Chip>
                 </TouchableOpacity>
-                {categories.map(c => (
+                {categories.map((c) => (
                     <TouchableOpacity onPress={() => search(c.id, setCateId)} key={c.id}>
-                        <Chip style={MyStyles.margin} icon="label" >{c.name}</Chip>
+                        <Chip style={MyStyles.margin} icon="label">{c.name}</Chip>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -93,24 +96,25 @@ const Home = () => {
             <Searchbar 
                 placeholder="Tìm phòng trọ..." 
                 value={q} 
-                onChangeText={t => search(t, setQ)} 
+                onChangeText={(t) => search(t, setQ)} 
             />
 
             <FlatList 
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
                 onEndReached={loadMore} 
+                onEndReachedThreshold={0.5} // Đảm bảo gọi loadMore khi gần cuối
                 data={rooms} 
+                keyExtractor={(item) => item.id.toString()} // Dùng keyExtractor thay vì key trong renderItem
                 renderItem={({ item }) => (
                     <RoomItem 
-                        key={item.id} 
                         item={item} 
-                        routeName='roomDetail' 
-                        params={{ 'roomId': item.id }} 
+                        routeName="roomDetail" 
+                        params={{ roomId: item.id }} 
                     />
                 )}
             />
         </View> 
     );
-}
+};
 
 export default Home;
