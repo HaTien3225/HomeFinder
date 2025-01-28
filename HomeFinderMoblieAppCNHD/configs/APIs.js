@@ -3,38 +3,54 @@ import axios from "axios";
 const BASE_URL = 'https://hatien.pythonanywhere.com/';
 
 export const endpoints = {
-      // API lấy danh sách các danh mục phòng trọ (ví dụ: khu vực, loại phòng, v.v.)
+     // API danh mục (các category như loại phòng hoặc khu vực)
     'categories': '/categories/',
 
-    // API lấy danh sách các phòng trọ
-    'rooms': '/rooms/',
-
-    // API lấy danh sách các bài đăng của chủ nhà trọ
+    // API danh sách bài đăng phòng trọ
     'listings': '/listings/',
 
-    // API lấy chi tiết phòng trọ
-    'room-details': (roomId) => `/rooms/${roomId}/`,
+    // API chi tiết bài đăng
+    'listing-details': (listingId) => `/listings/${listingId}/`,
 
-    // API lấy bình luận của phòng trọ
-    'comments': (roomId) => `/rooms/${roomId}/comments/`,
+    // API bình luận theo bài đăng
+    'listing-comments': (listingId) => `/listings/${listingId}/comments/`,
 
-    // API cho việc đăng ký người dùng
+    // API yêu cầu phòng trọ (cho tenant gửi yêu cầu tìm phòng)
+    'room-requests': '/room-requests/',
+    'room-request-details': (requestId) => `/room-requests/${requestId}/`,
+
+    // API bình luận liên quan đến yêu cầu phòng trọ
+    'room-request-comments': (requestId) => `/room-requests/${requestId}/comments/`,
+
+    // API đăng ký người dùng mới
     'register': '/users/register/',
 
-    // API cho việc đăng nhập người dùng (OAuth2)
+    // API đăng nhập người dùng
     'login': '/o/token/',
 
     // API lấy thông tin người dùng hiện tại
     'current-user': '/users/current-user/',
 
-    // API để cập nhật thông tin người dùng
+    // API cập nhật hồ sơ người dùng
     'update-profile': '/users/update-profile/',
 
-    // API để tạo bài đăng cho thuê phòng của chủ nhà trọ
+    // API danh sách bài đăng của chủ nhà trọ
+    'landlord-listings': '/landlord/listings/',
+
+    // API tạo bài đăng mới (dành cho host)
     'create-listing': '/landlord/listings/create/',
 
-    // API để tìm kiếm phòng trọ theo các tiêu chí
-    'search-rooms': '/rooms/search/'
+    // API tìm kiếm phòng trọ
+    'search-listings': '/listings/search/',
+
+    // API thông báo
+    'notifications': '/notifications/',
+
+    // API hệ thống chat
+    'chat': (userId) => `/chats/${userId}/`,
+
+    // API thống kê
+    'statistics': '/statistics/',
 }
 
 export const authApis = (token) => {

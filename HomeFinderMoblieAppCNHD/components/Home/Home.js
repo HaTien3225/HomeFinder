@@ -1,10 +1,8 @@
 import { View, ActivityIndicator, TouchableOpacity, FlatList, RefreshControl } from "react-native";
-import MyStyles from "../../styles/MyStyles";
 import React from 'react';
 import APIs, { endpoints } from "../../configs/APIs";
 import { Chip, Searchbar } from "react-native-paper";
-import RoomItem from "./RoomItem"; // Đảm bảo tên file và import đúng
-import RoomItem from '../components/RoomItem'; // Nếu RoomItem.js ở thư mục con
+import MyStyles from "../../styles/MyStyles";
 
 const Home = () => {
     const [categories, setCategories] = React.useState([]);  // Danh mục các loại phòng trọ
@@ -14,7 +12,7 @@ const Home = () => {
     const [page, setPage] = React.useState(1);  // Trang hiện tại
     const [q, setQ] = React.useState("");  // Từ khóa tìm kiếm
 
-    // Tải danh mục phòng trọ (ví dụ: phòng trọ sinh viên, phòng trọ giá rẻ...)
+    // Tải danh mục phòng trọ
     const loadCates = async () => {
         try {
             let res = await APIs.get(endpoints['categories']);
@@ -24,11 +22,10 @@ const Home = () => {
         }
     };
 
-    // Tải danh sách phòng trọ theo các bộ lọc
+    // Tải danh sách phòng trọ
     const loadRooms = async () => {
         if (page > 0) {
             setLoading(true);
-
             try {
                 let url = `${endpoints['rooms']}?page=${page}`;
                 if (cateId || q) 
@@ -50,7 +47,6 @@ const Home = () => {
         }
     };
 
-    // Tải lại dữ liệu khi các tham số thay đổi (category, page, search)
     React.useEffect(() => {
         loadCates();
     }, []);
@@ -60,19 +56,16 @@ const Home = () => {
         return () => clearTimeout(timer);
     }, [cateId, page, q]);
 
-    // Tải thêm dữ liệu khi người dùng kéo xuống
     const loadMore = () => {
         if (page > 0 && !loading) 
             setPage((prevPage) => prevPage + 1);
     };
 
-    // Chức năng tìm kiếm theo từ khóa hoặc danh mục
     const search = (value, callback) => {
         setPage(1);
         callback(value);
     };
 
-    // Refresh lại dữ liệu
     const refresh = () => {
         setPage(1);
         loadRooms();
@@ -102,9 +95,9 @@ const Home = () => {
             <FlatList 
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
                 onEndReached={loadMore} 
-                onEndReachedThreshold={0.5} // Đảm bảo gọi loadMore khi gần cuối
+                onEndReachedThreshold={0.5}
                 data={rooms} 
-                keyExtractor={(item) => item.id.toString()} // Dùng keyExtractor thay vì key trong renderItem
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <RoomItem 
                         item={item} 
@@ -113,7 +106,7 @@ const Home = () => {
                     />
                 )}
             />
-        </View> 
+        </View>
     );
 };
 
