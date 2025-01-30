@@ -1,9 +1,11 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window"); // Lấy chiều rộng màn hình
 
 const MyStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0', // Light background color
+    backgroundColor: "#f0f0f0", // Light background color
     padding: 20, // Add some padding for better readability
   },
   row: {
@@ -29,36 +31,36 @@ const MyStyles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 10,
-    backgroundColor: '#fff', // Add a background color to the box
-    alignItems: 'center', // Center content vertically
-    justifyContent: 'center', // Center content horizontally
-    shadowColor: '#000',
+    backgroundColor: "#fff", // Add a background color to the box
+    alignItems: "center", // Center content vertically
+    justifyContent: "center", // Center content horizontally
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5, // For Android
   },
   textCenter: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   button: {
-    backgroundColor: '#4CAF50', // Green button color
+    backgroundColor: "#4CAF50", // Green button color
     padding: 10,
     borderRadius: 5,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 12,
     marginTop: 5,
   },
