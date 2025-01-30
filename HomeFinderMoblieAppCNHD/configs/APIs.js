@@ -3,49 +3,102 @@ import axios from "axios";
 const BASE_URL = 'https://hatien.pythonanywhere.com/';
 
 export const endpoints = {
-      // API lấy danh sách các danh mục phòng trọ (ví dụ: khu vực, loại phòng, v.v.)
-    'categories': '/categories/',
-
-    // API lấy danh sách các phòng trọ
-    'rooms': '/rooms/',
-
-    // API lấy danh sách các bài đăng của chủ nhà trọ
-    'listings': '/listings/',
-
-    // API lấy chi tiết phòng trọ
-    'room-details': (roomId) => `/rooms/${roomId}/`,
-
-    // API lấy bình luận của phòng trọ
-    'comments': (roomId) => `/rooms/${roomId}/comments/`,
-
-    // API cho việc đăng ký người dùng
-    'register': '/users/register/',
-
-    // API cho việc đăng nhập người dùng (OAuth2)
-    'login': '/o/token/',
+    // API đăng ký người dùng mới
+    'users-create': '/users/',
 
     // API lấy thông tin người dùng hiện tại
-    'current-user': '/users/current-user/',
+    'users-get-user': '/users/current-user/',
 
-    // API để cập nhật thông tin người dùng
-    'update-profile': '/users/update-profile/',
+    // API cập nhật thông tin người dùng
+    'users-update-profile': '/users/update-profile/',
 
-    // API để tạo bài đăng cho thuê phòng của chủ nhà trọ
-    'create-listing': '/landlord/listings/create/',
+    // API xóa người dùng
+    'users-delete': (userId) => `/users/${userId}/delete/`,
 
-    // API để tìm kiếm phòng trọ theo các tiêu chí
-    'search-rooms': '/rooms/search/'
-}
+    // API đăng nhập người dùng (OAuth2)
+    'users-login': '/o/token/',
 
+    // API lấy danh sách các phòng chat
+    'chats-list': '/chats/',
+
+    // API tạo một phòng chat mới
+    'chats-create': '/chats/',
+
+    // API lấy lịch sử chat
+    'chats-chat-history': '/chats/history/',
+
+    // API xóa một phòng chat
+    'chats-delete-chat': (chatId) => `/chats/${chatId}/delete/`,
+
+    // API lấy danh sách các bình luận
+    'comments-list': '/comments/',
+
+    // API tạo một bình luận
+    'comments-create': '/comments/',
+
+    // API xóa một bình luận
+    'comments-delete-comment': (commentId) => `/comments/${commentId}/delete/`,
+
+    // API cập nhật một bình luận
+    'comments-update-comment': (commentId) => `/comments/${commentId}/update/`,
+
+    // API lấy danh sách các follow
+    'follow-list': '/follow/',
+
+    // API tạo một follow mới
+    'follow-create': '/follow/',
+
+    // API lấy danh sách các bài đăng (listing)
+    'listings-list': '/listings/',
+
+    // API tạo một bài đăng mới
+    'listings-create': '/listings/',
+
+    // API lấy danh sách các bình luận của một bài đăng
+    'listings-get-comment': (listingId) => `/listings/${listingId}/comments/`,
+
+    // API xóa một bài đăng
+    'listings-delete-listing': (listingId) => `/listings/${listingId}/delete/`,
+
+    // API yêu thích một bài đăng
+    'listings-favorite-listing': (listingId) => `/listings/${listingId}/favorite/`,
+
+    // API báo cáo một bài đăng
+    'listings-report-listing': (listingId) => `/listings/${listingId}/report/`,
+
+    // API lấy danh sách thông báo
+    'notifications-list': '/notifications/',
+
+    // API đánh dấu thông báo là đã đọc
+    'notifications-mark-as-read': (notificationId) => `/notifications/${notificationId}/mark-read/`,
+
+    // API lấy danh sách các yêu cầu phòng trọ
+    'room-requests-list': '/room_requests/',
+
+    // API tạo một yêu cầu phòng trọ mới
+    'room-requests-create': '/room_requests/',
+
+    // API hủy một yêu cầu phòng trọ
+    'room-requests-cancel-request': (roomRequestId) => `/room_requests/${roomRequestId}/cancel/`,
+
+    // API lấy danh sách thống kê
+    'statistics-list': '/statistics/',
+
+    // API lấy thống kê theo khu vực
+    'statistics-location-statistics': '/statistics/location-statistics/',
+};
+
+// Hàm để tạo instance với token cho các API yêu cầu xác thực
 export const authApis = (token) => {
     return axios.create({
         baseURL: BASE_URL,
         headers: {
             'Authorization': `Bearer ${token}`
         }
-    })
+    });
 }
 
+// Default axios instance không có authorization token
 export default axios.create({
     baseURL: BASE_URL
 });

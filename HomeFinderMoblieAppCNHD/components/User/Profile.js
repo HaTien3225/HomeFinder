@@ -6,20 +6,23 @@ import { MyDispatchContext, MyUserContext } from "../../configs/MyUserContext";
 import MyStyles from "../../styles/MyStyles";
 
 const UserProfile = () => {
-    const user = useContext(MyUserContext);
-    const dispatch = useContext(MyDispatchContext);
+    const user = useContext(MyUserContext);  // Lấy thông tin người dùng từ context
+    const dispatch = useContext(MyDispatchContext);  // Dùng dispatch để cập nhật trạng thái
 
+    // Hàm đăng xuất
     const logout = async () => {
-        await AsyncStorage.removeItem("token");
+        await AsyncStorage.removeItem("token");  // Xóa token khỏi AsyncStorage
         dispatch({
-            "type": "logout"
-        })
+            "type": "logout"  // Gửi action để cập nhật trạng thái đăng xuất trong context
+        });
     }
 
     return (
         <View style={MyStyles.container}>
-            <Text style={MyStyles.subject}>Chào {user?.username}</Text>
-            <Button mode="contained-tonal" onPress={logout}>Đăng xuất</Button>
+            <Text style={MyStyles.subject}>Chào {user?.username}</Text>  {/* Hiển thị tên người dùng */}
+            <Button mode="contained-tonal" onPress={logout} style={MyStyles.margin}>
+                Đăng xuất
+            </Button>
         </View>
     );
 }

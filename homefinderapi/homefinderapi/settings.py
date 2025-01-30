@@ -169,5 +169,5 @@ cloudinary.config(
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
 
-CLIENT_ID='wViGUHdy4Qs44QTWkLPIc9PXyRsAAbghJy8h5dxZ'
-CLIENT_SECRET='mKY90jlOevbU2B3YEBOm3Yg8qmqBmYHVWrbzO5lYznXPHTSCCbynuogRwL3s75yNk3NGFhGnlPb7bYYkVlTekDOOqbXiv8BhqODtbFUeXomYxnxy41RQcLgTvvxZtLF8'
+CLIENT_ID='MdzBsYRoQzBAsB9D6lciSZrtfsHO6MvwrVneZZLu'
+CLIENT_SECRET='DOpA0BBOr1slSZ5RMbZH8lZ9CnFT7CUKS6433rzVal9fq6TaZAf5MTyUu8u7boJOy2nCqZlqOYDi6ggc2MdRqWGDqXpH75eoVCxzCX6LyL7a0lccdIeDiqZJQt3whBc9'

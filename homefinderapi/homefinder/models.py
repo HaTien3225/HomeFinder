@@ -12,6 +12,10 @@ class UserManager(BaseUserManager):
             raise ValueError('Vui lòng điền email.')
 
         email = self.normalize_email(email)
+
+        # Thiết lập is_active mặc định là True
+        extra_fields.setdefault('is_active', True)
+
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -21,6 +25,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', 'admin')
+        extra_fields.setdefault('is_active', True)  # Đảm bảo is_active là True cho superuser
 
         if not extra_fields.get('is_staff'):
             raise ValueError('Superuser phải có is_staff=True.')
