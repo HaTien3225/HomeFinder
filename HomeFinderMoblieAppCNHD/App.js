@@ -1,4 +1,3 @@
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './components/Home/Home';
@@ -13,6 +12,11 @@ import MyUserReducers from './configs/MyUserReducers';
 import UserProfile from './components/User/Profile';
 import Room from './components/Home/Room';
 import RoomDetails from './components/Home/RoomDetails';
+import CreateListing from './components/Home/CreateListing'; // Đảm bảo đã import CreateListing
+import RegisterHost from './components/Home/RegisterHost';
+import UserProfileStack from './components/User/UserProfileStack';  // Đảm bảo nhập đúng đường dẫn
+
+
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +24,8 @@ const StackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="index" component={Home} />
+      <Stack.Screen name="CreateListing" component={CreateListing} />
+      <Stack.Screen name="RegisterHost" component={RegisterHost} />
       <Stack.Screen name="room" component={Room} />
       <Stack.Screen name="roomDetails" component={RoomDetails} />
     </Stack.Navigator>
@@ -31,28 +37,50 @@ const TabNavigator = () => {
   const user = useContext(MyUserContext);
 
   return (
-    <Tab.Navigator>
-      <Tab.Screen name="home" component={StackNavigator} options={{title: "Màn hình chính", tabBarIcon: () => <Icon source="home-account" size={20} />}} />
-      {user===null?<>
-        <Tab.Screen name="login" component={Login} options={{title: "Đăng nhập", tabBarIcon: () => <Icon source="account-check" size={20} />}} />
-        <Tab.Screen name="register" component={Register} options={{title: "Đăng ký", tabBarIcon: () => <Icon source="account-plus" size={20} />}} />
-      </>:<>
-        <Tab.Screen name="profile" component={UserProfile} options={{title: "Tài khoản", tabBarIcon: () => <Icon source="account-check" size={20} />}} />
-      </>}
-    </Tab.Navigator>
+    <Tab.Navigator screenOptions={{headerShown: true}}>
+    <Tab.Screen
+      name="home"
+      component={StackNavigator}
+      options={{ title: "Màn hình chính", tabBarIcon: () => <Icon source="home-account" size={20} /> }}
+    />
+    {user === null ? (
+      <>
+        <Tab.Screen
+          name="login"
+          component={Login}
+          options={{ title: "Đăng nhập", tabBarIcon: () => <Icon source="account-check" size={20} /> }}
+        />
+        <Tab.Screen
+          name="register"
+          component={Register}
+          options={{ title: "Đăng ký", tabBarIcon: () => <Icon source="account-plus" size={20} /> }}
+        />
+      </>
+    ) : (
+      <>
+        <Tab.Screen
+          name="profile"
+          component={UserProfileStack}  // Sử dụng UserProfileStack để bao gồm cả RegisterHost và CreateListing
+          options={{ title: "Tài khoản",  headerShown: false, tabBarIcon: () => <Icon source="account-check" size={20} /> }}
+        />
+      </>
+    )}
+  </Tab.Navigator>
+  
   );
 }
+
 
 export default function App() {
   const [user, dispatch] = useReducer(MyUserReducers, null);
 
   return (
-      <NavigationContainer>
-        <MyUserContext.Provider value={user}>
-          <MyDispatchContext.Provider value={dispatch}>
-            <TabNavigator />
-          </MyDispatchContext.Provider>
-        </MyUserContext.Provider>
-      </NavigationContainer>
+    <NavigationContainer>
+      <MyUserContext.Provider value={user}>
+        <MyDispatchContext.Provider value={dispatch}>
+          <TabNavigator />
+        </MyDispatchContext.Provider>
+      </MyUserContext.Provider>
+    </NavigationContainer>
   );
 }
