@@ -92,15 +92,6 @@ class Follow(BaseModel):
     host = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
 
 
-class Comment(BaseModel):
-    listing = models.ForeignKey(Listing, related_name='comments', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
-    content = RichTextField()
-
-    def __str__(self):
-        return f"{self.user.username} - {self.listing.title}"
-
-
 class RoomRequest(BaseModel):
     tenant = models.ForeignKey(User, related_name='room_requests', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
@@ -113,18 +104,17 @@ class RoomRequest(BaseModel):
         return self.title
 
 
-class Comment(BaseModel):
+class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    listing = models.ForeignKey(Listing, null=True, blank=True, on_delete=models.CASCADE)
-    room_request = models.ForeignKey(RoomRequest, null=True, blank=True, on_delete=models.CASCADE)
+    listing = models.ForeignKey("Listing", on_delete=models.CASCADE, null=True, blank=True)
+    room_request = models.ForeignKey("RoomRequest", on_delete=models.CASCADE, null=True, blank=True)
+    parent_comment = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
     content = models.TextField()
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.content[:20]
-
+        return f"Comment by {self.user.username} on {self.created_at}"
 
 
 class Notification(BaseModel):

@@ -1,5 +1,5 @@
 from django.contrib.admin.templatetags.admin_list import pagination
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from oauth2_provider.contrib.rest_framework import permissions
 from rest_framework import viewsets, generics
 from rest_framework.decorators import action
@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from rest_framework.response import Response
 from . import paginators
 from .models import User, Listing, Follow, Comment, Notification, RoomRequest, Chat, Statistics
+from .paginators import ItemPaginator
 from .serializers import UserSerializer, ListingSerializer, FollowSerializer, CommentSerializer, NotificationSerializer, RoomRequestSerializer, ChatSerializer, StatisticsSerializer
 
 
@@ -98,39 +99,78 @@ class FollowViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
 # Comment ViewSet
 class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.select_related('user', 'listing', 'room_request', 'parent_comment')
     serializer_class = CommentSerializer
-    pagination_class = paginators.ItemPaginator
+    pagination_class = ItemPaginator
 
-    @action(methods=['patch'], detail=True, url_path='update', permission_classes=[IsAuthenticated])
+    def get_queryset(self):
+        """
+        Truy vấn bình luận theo từng bài đăng hoặc yêu cầu phòng, tối ưu với Prefetch.
+        """
+        listing_id = self.request.query_params.get("listing")
+        room_request_id = self.request.query_params.get("room_request")
+
+        queryset = self.queryset.filter(active=True)
+
+        if listing_id:
+            queryset = queryset.filter(listing_id=listing_id).prefetch_related(
+                Prefetch("replies", queryset=Comment.objects.filter(active=True))
+            )
+        elif room_request_id:
+            queryset = queryset.filter(room_request_id=room_request_id).prefetch_related(
+                Prefetch("replies", queryset=Comment.objects.filter(active=True))
+            )
+
+        return queryset
+
+    def perform_create(self, serializer):
+        """
+        Kiểm tra và lưu comment mới, hỗ trợ phản hồi bình luận.
+        """
+        listing_id = self.request.data.get("listing")
+        room_request_id = self.request.data.get("room_request")
+        parent_comment_id = self.request.data.get("parent_comment")
+
+        if listing_id and room_request_id:
+            return Response({"error": "Chỉ có thể thuộc Listing hoặc RoomRequest, không phải cả hai"}, status=400)
+
+        if parent_comment_id:
+            parent_comment = Comment.objects.filter(id=parent_comment_id, active=True).first()
+            if not parent_comment:
+                return Response({"error": "Bình luận gốc không tồn tại hoặc đã bị xóa"}, status=400)
+            serializer.save(user=self.request.user, parent_comment=parent_comment)
+        elif listing_id:
+            serializer.save(user=self.request.user, listing_id=listing_id)
+        elif room_request_id:
+            serializer.save(user=self.request.user, room_request_id=room_request_id)
+        else:
+            return Response({"error": "Cần có Listing hoặc RoomRequest để tạo bình luận"}, status=400)
+
+    @action(methods=["patch"], detail=True, url_path="update", permission_classes=[IsAuthenticated])
     def update_comment(self, request, pk):
+        """
+        Cập nhật bình luận nếu người dùng là chủ sở hữu.
+        """
         comment = self.get_object()
         if comment.user != request.user:
-            return Response({"error": "Không có quyền sửa chữa"}, status=403)
+            return Response({"error": "Bạn không có quyền chỉnh sửa bình luận này"}, status=403)
+
         serializer = self.get_serializer(comment, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
-    @action(methods=['delete'], detail=True, url_path='delete', permission_classes=[IsAuthenticated])
+    @action(methods=["delete"], detail=True, url_path="delete", permission_classes=[IsAuthenticated])
     def delete_comment(self, request, pk):
+        """
+        Xóa bình luận nếu người dùng là chủ sở hữu.
+        """
         comment = self.get_object()
         if comment.user != request.user:
-            return Response({"error": "Không có quyền xóa comment này"}, status=403)
+            return Response({"error": "Bạn không có quyền xóa bình luận này"}, status=403)
+
         comment.delete()
-        return Response({"message": "Comment đã được xóa"})
-
-    def perform_create(self, serializer):
-        # Xác định xem comment thuộc về Listing hay RoomRequest
-        listing_id = self.request.data.get('listing')
-        room_request_id = self.request.data.get('room_request')
-
-        if listing_id:
-            serializer.save(user=self.request.user, listing_id=listing_id)
-        elif room_request_id:
-            serializer.save(user=self.request.user, room_request_id=room_request_id)
-        else:
-            return Response({"error": "Listing hoặc RoomRequest phải được chỉ định"}, status=400)
+        return Response({"message": "Bình luận đã bị xóa"})
 
 # Notification ViewSet
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):

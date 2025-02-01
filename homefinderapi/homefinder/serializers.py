@@ -74,12 +74,18 @@ class FollowSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    listing = ListingSerializer(read_only=True)
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['id', 'listing', 'user', 'content']
+        fields = ["id", "user", "listing", "room_request", "content", "parent_comment", "replies", "created_at"]
+
+    def get_replies(self, obj):
+        """
+        Lấy danh sách phản hồi cho bình luận.
+        """
+        replies = obj.replies.filter(active=True)
+        return CommentSerializer(replies, many=True).data
 
 
 class NotificationSerializer(serializers.ModelSerializer):
