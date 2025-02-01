@@ -66,6 +66,9 @@ const ListingDetail = ({ route }) => {
         })
       );
 
+      // Sắp xếp các bình luận theo thời gian tạo (giả sử comment có trường created_at)
+      updatedComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
       setComments(updatedComments); // Cập nhật tất cả các bình luận
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -104,17 +107,23 @@ const ListingDetail = ({ route }) => {
       console.log('Response body:', responseBody);
 
       if (!response.ok) {
-        throw new Error("Failed to add comment.");
+        throw new Error("Không thể thêm bình luận.");
       }
 
       if (responseBody.id) {
-        setComments((prevComments) => [...prevComments, responseBody]);
-        setComment(""); // Reset the comment input
+        // Nếu bình luận được thêm thành công, cập nhật lại danh sách bình luận
+        const newComment = {
+          ...responseBody,
+          user: userInfo, // Thêm thông tin người dùng vào bình luận mới
+        };
+
+        setComments((prevComments) => [newComment, ...prevComments]); // Thêm bình luận mới vào đầu danh sách
+        setComment(""); // Reset ô nhập bình luận
       } else {
-        throw new Error("Invalid response data.");
+        throw new Error("Dữ liệu phản hồi không hợp lệ.");
       }
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error("Lỗi khi thêm bình luận:", error);
       Alert.alert("Lỗi", "Không thể gửi bình luận. Vui lòng thử lại!");
     }
   };
@@ -138,10 +147,10 @@ const ListingDetail = ({ route }) => {
       if (response.ok) {
         setComments(comments.filter((comment) => comment.id !== commentId));
       } else {
-        throw new Error("Failed to delete comment.");
+        throw new Error("Không thể xóa bình luận.");
       }
     } catch (error) {
-      console.error("Error deleting comment:", error);
+      console.error("Lỗi khi xóa bình luận:", error);
       Alert.alert("Lỗi", "Không thể xóa bình luận. Vui lòng thử lại!");
     }
   };
@@ -337,10 +346,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingLeft: 10,
     backgroundColor: "#fff",
-    marginVertical: 10,
+    marginTop: 10,
   },
   commentButton: {
-    backgroundColor: "#FF6347",
+    marginTop: 10,
+    marginBottom: 20,
   },
 });
 
