@@ -9,11 +9,11 @@ const RegisterHost = ({ navigation }) => {
   const [role, setRole] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [images, setImages] = useState([null, null, null]); // Dùng mảng để lưu trữ ảnh
+  const [images, setImages] = useState([null, null, null]); // Mảng lưu ảnh
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Request media library permissions
+    // Xin quyền truy cập thư viện ảnh
     const requestPermissions = async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -22,7 +22,7 @@ const RegisterHost = ({ navigation }) => {
     };
     requestPermissions();
 
-    // Fetch token from AsyncStorage
+    // Lấy token từ AsyncStorage
     const fetchToken = async () => {
       const savedToken = await AsyncStorage.getItem('token');
       if (savedToken) {
@@ -37,14 +37,12 @@ const RegisterHost = ({ navigation }) => {
   useEffect(() => {
     if (!token) return;
 
-    // Fetch user data
+    // Lấy dữ liệu user
     const fetchUserData = async () => {
       try {
         const response = await fetch('https://hatien.pythonanywhere.com/users/current-user/', {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
         });
         const data = await response.json();
         if (response.ok) {
@@ -64,15 +62,14 @@ const RegisterHost = ({ navigation }) => {
   const pickImage = async (index) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false,
       quality: 1,
     });
     if (!result.canceled) {
       const newImages = [...images];
       newImages[index] = result.assets[0].uri;
       setImages(newImages);
-      console.log('Image URI:', result.assets[0].uri); // Debug log
+      console.log(`Image ${index + 1} URI:`, result.assets[0].uri);
     }
   };
 
@@ -94,33 +91,29 @@ const RegisterHost = ({ navigation }) => {
       // Upload 3 ảnh
       images.forEach((image, index) => {
         if (image) {
-          const imageName = `image${index + 1}.jpg`;  // Example naming convention
-          formData.append(`image${index + 1}`, {
+          formData.append(`image_${index + 1}`, {
             uri: image,
-            name: imageName,
-            type: 'image/jpeg',
+            name: `image${index + 1}.jpg`, // Đảm bảo có đuôi .jpg
+            type: 'image/jpeg',  // Định dạng chuẩn cho server
           });
-          console.log(`Image ${index + 1} URI:`, image);  // Debug log
+          console.log(`Image ${index + 1} added to FormData:`, image);
         }
       });
 
-      // Log FormData contents (not directly possible, so logging individual data)
-      console.log('FormData contents:');
-      console.log('Phone Number:', phoneNumber);
-      console.log('Role: host');
-      console.log('Address:', address);
-      images.forEach((image, index) => {
-        if (image) {
-          console.log(`Image ${index + 1}:`, image);
-        }
-      });
+      console.log('🔍 FormData Contents:', JSON.stringify(formData, null, 2)); // Debug
 
       const response = await fetch('https://hatien.pythonanywhere.com/users/update-profile/', {
         method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data', // Đặt Content-Type rõ ràng
+        },
         body: formData,
       });
+
       const data = await response.json();
+      console.log('🔍 Server Response:', data); // Debug toàn bộ phản hồi server
+
       if (response.ok) {
         Alert.alert('Thành công', 'Bạn đã đăng ký làm chủ trọ.');
         navigation.navigate('home');
@@ -128,20 +121,9 @@ const RegisterHost = ({ navigation }) => {
         Alert.alert('Lỗi', data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
       }
     } catch (error) {
-      console.error('Error during registration:', error);
+      console.error('❌ Error during registration:', error);
       Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ.');
     }
-  };
-
-  const printFormData = () => {
-    console.log('Email:', email);
-    console.log('Username:', username);
-    console.log('Role:', role);
-    console.log('Phone Number:', phoneNumber);
-    console.log('Address:', address);
-    images.forEach((image, index) => {
-      console.log(`Image ${index + 1}:`, image);
-    });
   };
 
   return (
@@ -184,7 +166,6 @@ const RegisterHost = ({ navigation }) => {
         </View>
       ))}
       <Button title="Xác nhận đăng ký" onPress={handleRegister} />
-      <Button title="In ra dữ liệu" onPress={printFormData} /> {/* Thêm nút để in dữ liệu */}
     </View>
   );
 };
