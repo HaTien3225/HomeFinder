@@ -23,21 +23,50 @@ const ListingDetail = ({ route }) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/comments/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${userToken}`, // Thêm token vào header
-        },
-      });
+      let commentsList = [];
+      let url = `${API_URL}/comments/`; // Đảm bảo URL này trả về phân trang nếu cần
 
-      if (!response.ok) {
-        const errorText = await response.text(); // Log more detailed error
-        throw new Error(`HTTP error! Status: ${response.status}. Error: ${errorText}`);
+      // Lặp qua các trang nếu API trả về thuộc tính next
+      while (url) {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${userToken}`, // Thêm token vào header
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! Status: ${response.status}. Error: ${errorText}`);
+        }
+
+        const data = await response.json();
+        commentsList = commentsList.concat(data.results); // Kết hợp các bình luận từ các trang
+        url = data.next; // Cập nhật URL nếu có trang tiếp theo
       }
 
-      const data = await response.json();
-      setComments(data.results);
+      // Lấy thông tin người dùng cho mỗi comment dựa trên user.id
+      const updatedComments = await Promise.all(
+        commentsList.map(async (comment) => {
+          const userResponse = await fetch(`${API_URL}/users/${comment.user}/get-user-by-id/`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${userToken}`, // Thêm token vào header khi lấy thông tin người dùng
+            },
+          });
+          if (!userResponse.ok) {
+            throw new Error("Lỗi khi lấy thông tin người dùng");
+          }
+          const userData = await userResponse.json();
+          return {
+            ...comment,
+            user: userData, // Gắn thông tin người dùng vào comment
+          };
+        })
+      );
+
+      setComments(updatedComments); // Cập nhật tất cả các bình luận
     } catch (error) {
       console.error("Error fetching comments:", error);
       setError("Không thể tải bình luận. Vui lòng thử lại sau!");
@@ -70,17 +99,16 @@ const ListingDetail = ({ route }) => {
         }),
       });
 
-      // Log response to check
+      const responseBody = await response.json();
       console.log('Response status:', response.status);
-      console.log('Response body:', await response.text());
+      console.log('Response body:', responseBody);
 
       if (!response.ok) {
         throw new Error("Failed to add comment.");
       }
 
-      const data = await response.json();
-      if (data.id) {
-        setComments([...comments, data]);
+      if (responseBody.id) {
+        setComments((prevComments) => [...prevComments, responseBody]);
         setComment(""); // Reset the comment input
       } else {
         throw new Error("Invalid response data.");
@@ -125,7 +153,7 @@ const ListingDetail = ({ route }) => {
   // Hàm lấy thông tin người dùng từ token
   const getUserInfoFromToken = async (token) => {
     try {
-      const response = await fetch(`${API_URL}/user-info/`, {
+      const response = await fetch(`${API_URL}/users/current-user/`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -176,9 +204,15 @@ const ListingDetail = ({ route }) => {
         ) : (
           comments.map((commentItem) => (
             <View key={commentItem.id} style={styles.commentItem}>
-              <Avatar.Image size={40} source={{ uri: commentItem.user.avatar }} />
+              <Avatar.Image 
+                size={40} 
+                source={{ uri: commentItem.user?.avatar || 'https://www.example.com/default-avatar.png' }} 
+                style={styles.avatar} 
+              />
               <View style={styles.commentContent}>
-                <Text style={styles.commentUsername}>{commentItem.user.username}</Text>
+                <Text style={styles.commentUsername}>
+                  {commentItem.user?.username || "Người dùng"}
+                </Text>
                 <Text style={styles.commentText}>
                   {commentItem.content ? commentItem.content.replace(/<\/?[^>]+(>|$)/g, "") : "Nội dung bình luận không có sẵn."}
                 </Text>
@@ -281,17 +315,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
   },
+  avatar: {
+    marginRight: 10,
+  },
   commentContent: {
     flex: 1,
-    marginLeft: 10,
   },
   commentUsername: {
     fontWeight: "bold",
     fontSize: 14,
+    color: "#333",
   },
   commentText: {
     fontSize: 16,
-    color: "#333",
+    color: "#666",
   },
   commentInput: {
     height: 40,
