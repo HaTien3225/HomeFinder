@@ -14,6 +14,7 @@ import Room from './components/Home/Room';
 import RoomDetails from './components/Home/RoomDetails';
 import CreateListing from './components/Home/CreateListing'; // Đảm bảo đã import CreateListing
 import RegisterHost from './components/Home/RegisterHost';
+import ListingDetail from './components/Home/ListingDetail';
 import UserProfileStack from './components/User/UserProfileStack';  // Đảm bảo nhập đúng đường dẫn
 
 
@@ -28,6 +29,8 @@ const StackNavigator = () => {
       <Stack.Screen name="RegisterHost" component={RegisterHost} />
       <Stack.Screen name="room" component={Room} />
       <Stack.Screen name="roomDetails" component={RoomDetails} />
+      <Stack.Screen name="ListingDetail" component={ListingDetail} />
+
     </Stack.Navigator>
   );
 }

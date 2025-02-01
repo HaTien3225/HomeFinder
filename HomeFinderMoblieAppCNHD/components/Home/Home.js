@@ -1,8 +1,8 @@
-import { View, ActivityIndicator, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { View, ActivityIndicator, FlatList, RefreshControl, Text } from "react-native";
 import React from 'react';
-import APIs, { endpoints } from "../../configs/APIs";
-import { Chip, Searchbar } from "react-native-paper";
-import ListingItem from "./Items"; // Đảm bảo tên file và import đúng
+import APIs from "../../configs/APIs";
+import { Searchbar } from "react-native-paper";
+import ListingItem from "./Items"; // Đảm bảo rằng bạn import đúng ListingItem
 import MyStyles from '../../styles/MyStyles';
 
 const Home = () => {
@@ -11,53 +11,51 @@ const Home = () => {
     const [q, setQ] = React.useState("");  // Từ khóa tìm kiếm
     const [page, setPage] = React.useState(1);  // Trang hiện tại
 
-    // Tải danh sách phòng trọ theo các bộ lọc
     const loadListings = async () => {
         if (page > 0) {
             setLoading(true);
-
             try {
-                let url = `${endpoints['listings-list']}?page=${page}`;
-                if (q) 
-                    url += `&q=${q}`;  // Thêm từ khóa tìm kiếm vào URL
+                // Cập nhật URL với tên miền
+                let url = `https://hatien.pythonanywhere.com/listings/?page=${page}`;
+                if (q) url += `&q=${q}`;
 
-                let res = await APIs.get(url);
-                if (page > 1) 
-                    setListings((prevListings) => [...prevListings, ...res.data.results]);  // Nếu là trang tiếp theo thì gộp dữ liệu
-                else 
-                    setListings(res.data.results);  // Trang đầu tiên thì thay thế danh sách
+                console.log("Loading from URL:", url); // Debug URL
+                const res = await APIs.get(url);
 
-                if (!res.data.next) 
-                    setPage(0);  // Nếu không có trang tiếp theo thì ngừng tải thêm
-            } catch (ex) {
-                console.error("Error loading listings:", ex);
+                if (page > 1) {
+                    setListings((prevListings) => [...prevListings, ...res.data.results]);
+                } else {
+                    setListings(res.data.results);
+                }
+
+                if (!res.data.next) setPage(0);
+            } catch (error) {
+                console.error("Error loading listings:", error);
+                alert("Không thể tải danh sách phòng trọ. Vui lòng thử lại sau.");
             } finally {
                 setLoading(false);
             }
         }
     };
 
-    // Tải lại dữ liệu khi từ khóa thay đổi
     React.useEffect(() => {
-        let timer = setTimeout(() => loadListings(), 500);  // Delay để tránh tải lại quá nhanh
+        let timer = setTimeout(() => loadListings(), 500); 
         return () => clearTimeout(timer);
-    }, [q, page]);  // Khi từ khóa hoặc trang thay đổi, tải lại danh sách
+    }, [q, page]);
 
-    // Tải thêm dữ liệu khi người dùng kéo xuống
     const loadMore = () => {
-        if (page > 0 && !loading) 
-            setPage((prevPage) => prevPage + 1);  // Chuyển sang trang tiếp theo khi người dùng kéo xuống
+        if (page > 0 && !loading) {
+            setPage((prevPage) => prevPage + 1);
+        }
     };
 
-    // Chức năng tìm kiếm theo từ khóa
     const search = (value) => {
-        setPage(1);  // Reset về trang 1 khi tìm kiếm lại
-        setQ(value);  // Cập nhật từ khóa tìm kiếm
+        setPage(1);
+        setQ(value);
     };
 
-    // Refresh lại dữ liệu
     const refresh = () => {
-        setPage(1);  // Reset về trang 1 khi refresh
+        setPage(1);
         loadListings();
     };
 
@@ -69,23 +67,25 @@ const Home = () => {
                 onChangeText={search} 
             />
 
-            {loading && <ActivityIndicator />}
+            {loading && <ActivityIndicator size="large" />}
 
-            <FlatList 
+            {listings.length === 0 && !loading && <Text>Không có phòng trọ nào.</Text>}
+
+            <FlatList
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
-                onEndReached={loadMore} 
-                onEndReachedThreshold={0.5} // Đảm bảo gọi loadMore khi gần cuối
-                data={listings} 
-                keyExtractor={(item) => item.id.toString()} // Dùng keyExtractor thay vì key trong renderItem
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                data={listings}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <ListingItem 
-                        item={item} 
-                        routeName="listingDetail" 
-                        params={{ listingId: item.id }} 
+                    <ListingItem
+                        item={item} // Truyền item vào ListingItem
+                        routeName="listingDetail"
+                        params={{ listingId: item.id }}
                     />
                 )}
             />
-        </View> 
+        </View>
     );
 };
 

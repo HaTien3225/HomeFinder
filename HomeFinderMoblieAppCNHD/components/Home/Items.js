@@ -1,28 +1,60 @@
-import { List } from "react-native-paper";
-import { TouchableOpacity, Image, Text } from "react-native";
-import MyStyles from "../../styles/MyStyles";
+import React from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { Card, Paragraph } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-const Items = ({ item, routeName, params }) => {
-    const nav = useNavigation();
+const ListingItem = ({ item }) => {
+  const navigation = useNavigation();
 
-    return (
-        <List.Item
-            title={item.title}  // Sử dụng 'title' từ Listing
-            description={
-                <>
-                    <Text>Giá: {item.price} VND</Text>
-                    <Text>Địa chỉ: {item.address}</Text>
-                    <Text>Chủ nhà: {item.host.username}</Text>
-                </>
-            }
-            left={() => (
-                <TouchableOpacity onPress={() => nav.navigate(routeName, params)}>
-                    <Image source={{ uri: item.images }} style={MyStyles.box} />
-                </TouchableOpacity>
-            )}
-        />
-    );
+  const handlePress = () => {
+    navigation.navigate("ListingDetail", { item });
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} style={styles.container}>
+      <Card style={styles.card}>
+        <Card.Cover source={{ uri: item?.image }} style={styles.image} />
+        <Card.Content>
+          <Text style={styles.title}>{item?.title || "No Title"}</Text>
+          <Paragraph style={styles.price}>💰 Giá: {item?.price} VND</Paragraph>
+          <Paragraph style={styles.address}>📍 {item?.address}</Paragraph>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
+  );
 };
 
-export default Items;
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 15,
+  },
+  card: {
+    borderRadius: 10,
+    elevation: 5,
+    backgroundColor: "white",
+  },
+  image: {
+    height: 180,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 5,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FF6347",
+    marginTop: 5,
+  },
+  address: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 5,
+  },
+});
+
+export default ListingItem;
