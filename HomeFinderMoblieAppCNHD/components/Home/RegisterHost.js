@@ -118,7 +118,7 @@ const RegisterHost = ({ navigation }) => {
         Alert.alert('Thành công', 'Bạn đã đăng ký làm chủ trọ.');
         navigation.reset({
           index: 0,
-          routes: [{ name: 'home' }], // Đảm bảo tên của màn hình là "home"
+          routes: [{ name: 'UserProfile' }],
         });
       } else {
         Alert.alert('Lỗi', data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
