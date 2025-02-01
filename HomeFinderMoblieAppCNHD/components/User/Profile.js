@@ -18,6 +18,10 @@ const UserProfile = ({ navigation }) => {
     // Hàm đăng ký làm chủ trọ
     const registerHost = async () => {
         navigation.navigate("RegisterHost");
+        dispatch({
+            type: "setRole",
+            payload: { role: "host" },  // Cập nhật vai trò của người dùng thành "host"
+        });
     };
 
     return (
