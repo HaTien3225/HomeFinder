@@ -16,6 +16,7 @@ import CreateListing from './components/Home/CreateListing'; // Đảm bảo đ�
 import RegisterHost from './components/Home/RegisterHost';
 import ListingDetail from './components/Home/ListingDetail';
 import UserProfileStack from './components/User/UserProfileStack';  // Đảm bảo nhập đúng đường dẫn
+import PostNotificationScreen from './components/Home/PostNotificationScreen';
 
 
 
@@ -46,6 +47,12 @@ const TabNavigator = () => {
       component={StackNavigator}
       options={{ title: "Màn hình chính", tabBarIcon: () => <Icon source="home-account" size={20} /> }}
     />
+     {/* 🟢 Thêm tab "Đăng Thông Báo" ra ngoài điều kiện, ai cũng thấy */}
+    <Tab.Screen
+        name="Đăng Thông Báo"
+        component={PostNotificationScreen}
+        options={{ title: "Thông báo", tabBarIcon: () => <Icon source="bell" size={20} /> }}
+    />
     {user === null ? (
       <>
         <Tab.Screen
@@ -58,6 +65,7 @@ const TabNavigator = () => {
           component={Register}
           options={{ title: "Đăng ký", tabBarIcon: () => <Icon source="account-plus" size={20} /> }}
         />
+        
       </>
     ) : (
       <>
@@ -68,7 +76,8 @@ const TabNavigator = () => {
         />
       </>
     )}
-  </Tab.Navigator>
+    </Tab.Navigator>
+
   
   );
 }
