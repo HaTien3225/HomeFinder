@@ -1,4 +1,4 @@
-import { View, ActivityIndicator, FlatList, RefreshControl, Text } from "react-native";
+import { View, ActivityIndicator, FlatList, RefreshControl, Text, Image } from "react-native";
 import React from 'react';
 import APIs from "../../configs/APIs";
 import { Searchbar } from "react-native-paper";
@@ -10,6 +10,8 @@ const Home = () => {
     const [loading, setLoading] = React.useState(false);  // Trạng thái loading
     const [q, setQ] = React.useState("");  // Từ khóa tìm kiếm
     const [page, setPage] = React.useState(1);  // Trang hiện tại
+
+    
 
     const loadListings = async () => {
         if (page > 0) {
@@ -66,6 +68,7 @@ const Home = () => {
                 value={q} 
                 onChangeText={search} 
             />
+           
 
             {loading && <ActivityIndicator size="large" />}
 

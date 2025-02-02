@@ -49,9 +49,9 @@ const TabNavigator = () => {
     />
      {/* 🟢 Thêm tab "Đăng Thông Báo" ra ngoài điều kiện, ai cũng thấy */}
     <Tab.Screen
-        name="Đăng Thông Báo"
+        name="Room request"
         component={PostNotificationScreen}
-        options={{ title: "Thông báo", tabBarIcon: () => <Icon source="bell" size={20} /> }}
+        options={{ title: "Yêu Cầu Phòng", tabBarIcon: () => <Icon source="bell" size={20} /> }}
     />
     {user === null ? (
       <>
