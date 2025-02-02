@@ -24,7 +24,7 @@ const ListingDetail = ({ route }) => {
       }
 
       let commentsList = [];
-      let url = `${API_URL}/comments/`; // Đảm bảo URL này trả về phân trang nếu cần
+      let url = `${API_URL}/comments/?listing=${item.id}`; // Chỉ lấy bình luận cho listing hiện tại
 
       // Lặp qua các trang nếu API trả về thuộc tính next
       while (url) {
@@ -306,23 +306,18 @@ const styles = StyleSheet.create({
   commentTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
   },
   divider: {
-    marginBottom: 10,
+    marginVertical: 10,
   },
   noCommentText: {
-    fontSize: 16,
     color: "#888",
+    textAlign: "center",
   },
   commentItem: {
     flexDirection: "row",
+    marginVertical: 10,
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
   },
   avatar: {
     marginRight: 10,
@@ -331,26 +326,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   commentUsername: {
+    fontSize: 16,
     fontWeight: "bold",
-    fontSize: 14,
-    color: "#333",
   },
   commentText: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: "#444",
   },
   commentInput: {
-    height: 40,
-    borderColor: "#ccc",
+    marginTop: 15,
+    padding: 10,
     borderWidth: 1,
+    borderColor: "#ddd",
     borderRadius: 5,
-    paddingLeft: 10,
-    backgroundColor: "#fff",
-    marginTop: 10,
+    backgroundColor: "white",
   },
   commentButton: {
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 15,
+    backgroundColor: "#FF6347",
   },
 });
 
