@@ -31,62 +31,29 @@ const PostNotificationScreen = ({ navigation }) => {
       setDescription('');
       setPriceRange('');
       setPreferredLocation('');
+
+        // Chuyển đến danh sách & yêu cầu refresh
+    navigation.replace("TenantRequests", { refresh: true });
+
     } catch (error) {
-      if (error.response) {
-        console.error('Lỗi từ server:', error.response.data);
-      } else if (error.request) {
-        console.error('Không nhận được phản hồi từ server:', error.request);
-      } else {
-        console.error('Lỗi khi gửi request:', error.message);
-      }
+      console.error('Lỗi:', error.response ? error.response.data : error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Tiêu đề"
-        value={title}
-        onChangeText={setTitle}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mô tả"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Khoảng giá"
-        value={priceRange}
-        onChangeText={setPriceRange}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Vị trí ưu tiên"
-        value={preferredLocation}
-        onChangeText={setPreferredLocation}
-      />
-      <Button title="Gửi Thông Báo" onPress={handlePost} />
+      <TextInput style={styles.input} placeholder="Tiêu đề" value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} placeholder="Mô tả" value={description} onChangeText={setDescription} multiline />
+      <TextInput style={styles.input} placeholder="Khoảng giá" value={priceRange} onChangeText={setPriceRange} />
+      <TextInput style={styles.input} placeholder="Vị trí ưu tiên" value={preferredLocation} onChangeText={setPreferredLocation} />
+      <Button title=" Tìm kiếm " onPress={handlePost} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  input: {
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 8,
-    borderRadius: 5
-  },
+  container: { flex: 1, padding: 16 },
+  input: { height: 50, borderColor: '#ccc', borderWidth: 1, marginBottom: 16, padding: 8, borderRadius: 5 }
 });
 
 export default PostNotificationScreen;
