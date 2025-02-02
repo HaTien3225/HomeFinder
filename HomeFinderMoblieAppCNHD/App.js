@@ -10,8 +10,6 @@ import { MyDispatchContext, MyUserContext } from './configs/MyUserContext';
 import { useContext, useReducer } from 'react';
 import MyUserReducers from './configs/MyUserReducers';
 import UserProfile from './components/User/Profile';
-import Room from './components/Home/Room';
-import RoomDetails from './components/Home/RoomDetails';
 import CreateListing from './components/Home/CreateListing'; // Đảm bảo đã import CreateListing
 import RegisterHost from './components/Home/RegisterHost';
 import ListingDetail from './components/Home/ListingDetail';
@@ -28,9 +26,9 @@ const StackNavigator = () => {
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="CreateListing" component={CreateListing} />
       <Stack.Screen name="RegisterHost" component={RegisterHost} />
-      <Stack.Screen name="room" component={Room} />
-      <Stack.Screen name="roomDetails" component={RoomDetails} />
       <Stack.Screen name="ListingDetail" component={ListingDetail} />
+      <Stack.Screen name="PostNotificationScreen" component={PostNotificationScreen} />
+      
 
     </Stack.Navigator>
   );
@@ -48,11 +46,11 @@ const TabNavigator = () => {
       options={{ title: "Màn hình chính", tabBarIcon: () => <Icon source="home-account" size={20} /> }}
     />
      {/* 🟢 Thêm tab "Đăng Thông Báo" ra ngoài điều kiện, ai cũng thấy */}
-    <Tab.Screen
+    {/* <Tab.Screen
         name="Room request"
         component={PostNotificationScreen}
         options={{ title: "Yêu Cầu Phòng", tabBarIcon: () => <Icon source="bell" size={20} /> }}
-    />
+    /> */}
     {user === null ? (
       <>
         <Tab.Screen

@@ -67,6 +67,7 @@ const Home = () => {
                 placeholder="Tìm phòng trọ..." 
                 value={q} 
                 onChangeText={search} 
+                  style={{ marginBottom: 10 }}
             />
            
 

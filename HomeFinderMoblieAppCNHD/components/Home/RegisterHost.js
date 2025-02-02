@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, Alert, TextInput, Image } from 'react-native';
+import { View, Text, Alert, TextInput, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -13,7 +13,6 @@ const RegisterHost = ({ navigation }) => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Xin quyền truy cập thư viện ảnh
     const requestPermissions = async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -22,7 +21,6 @@ const RegisterHost = ({ navigation }) => {
     };
     requestPermissions();
 
-    // Lấy token từ AsyncStorage
     const fetchToken = async () => {
       const savedToken = await AsyncStorage.getItem('token');
       if (savedToken) {
@@ -37,7 +35,6 @@ const RegisterHost = ({ navigation }) => {
   useEffect(() => {
     if (!token) return;
 
-    // Lấy dữ liệu user
     const fetchUserData = async () => {
       try {
         const response = await fetch('https://hatien.pythonanywhere.com/users/current-user/', {
@@ -69,7 +66,6 @@ const RegisterHost = ({ navigation }) => {
       const newImages = [...images];
       newImages[index] = result.assets[0].uri;
       setImages(newImages);
-      console.log(`Image ${index + 1} URI:`, result.assets[0].uri);
     }
   };
 
@@ -88,89 +84,138 @@ const RegisterHost = ({ navigation }) => {
       formData.append('role', 'host');
       formData.append('address', address);
 
-      // Upload 3 ảnh
       images.forEach((image, index) => {
         if (image) {
           formData.append(`image_${index + 1}`, {
             uri: image,
-            name: `image${index + 1}.jpg`, // Đảm bảo có đuôi .jpg
-            type: 'image/jpeg',  // Định dạng chuẩn cho server
+            name: `image${index + 1}.jpg`,
+            type: 'image/jpeg',
           });
-          console.log(`Image ${index + 1} added to FormData:`, image);
         }
       });
-
-      console.log('🔍 FormData Contents:', JSON.stringify(formData, null, 2)); // Debug
 
       const response = await fetch('https://hatien.pythonanywhere.com/users/update-profile/', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Đặt Content-Type rõ ràng
+          'Content-Type': 'multipart/form-data',
         },
         body: formData,
       });
 
       const data = await response.json();
-      console.log('🔍 Server Response:', data); // Debug toàn bộ phản hồi server
 
       if (response.ok) {
         Alert.alert('Thành công', 'Bạn đã đăng ký làm chủ trọ.');
         navigation.reset({
           index: 0,
-          routes: [{ name: 'UserProfile' }],
+          routes: [{ name: 'home' }],
         });
       } else {
         Alert.alert('Lỗi', data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
       }
     } catch (error) {
-      console.error('❌ Error during registration:', error);
       Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ.');
     }
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Đăng Ký Làm Chủ Trọ</Text>
-      <Text>Email: {email}</Text>
-      <Text>Username: {username}</Text>
-      <Text>Role: {role}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Đăng Ký Làm Chủ Trọ</Text>
+      <Text style={styles.info}>Email: {email}</Text>
+      <Text style={styles.info}>Username: {username}</Text>
+      <Text style={styles.info}>Role: {role}</Text>
+
       <TextInput
-        style={{
-          height: 40,
-          borderColor: 'gray',
-          borderWidth: 1,
-          marginBottom: 10,
-          paddingLeft: 8,
-        }}
+        style={styles.input}
         placeholder="Số điện thoại"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
         keyboardType="phone-pad"
       />
       <TextInput
-        style={{
-          height: 40,
-          borderColor: 'gray',
-          borderWidth: 1,
-          marginBottom: 10,
-          paddingLeft: 8,
-        }}
+        style={styles.input}
         placeholder="Địa chỉ dãy trọ"
         value={address}
         onChangeText={setAddress}
       />
+
       {images.map((image, index) => (
-        <View key={index}>
-          <Button title={`Chọn ảnh ${index + 1}`} onPress={() => pickImage(index)} />
+        <View key={index} style={styles.imageContainer}>
+          <TouchableOpacity onPress={() => pickImage(index)} style={styles.imageButton}>
+            <Text style={styles.imageButtonText}>Chọn ảnh {index + 1}</Text>
+          </TouchableOpacity>
           {image && (
-            <Image source={{ uri: image }} style={{ width: 100, height: 100, marginTop: 10 }} />
+            <Image source={{ uri: image }} style={styles.imagePreview} />
           )}
         </View>
       ))}
-      <Button title="Xác nhận đăng ký" onPress={handleRegister} />
-    </View>
+
+      <TouchableOpacity style={styles.submitButton} onPress={handleRegister}>
+        <Text style={styles.submitButtonText}>Xác nhận đăng ký</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  info: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#555',
+  },
+  input: {
+    height: 50,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingLeft: 15,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    fontSize: 16,
+  },
+  imageContainer: {
+    marginBottom: 15,
+  },
+  imageButton: {
+    backgroundColor: '#56CCF2',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  imageButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  imagePreview: {
+    width: 120,
+    height: 120,
+    marginTop: 10,
+    borderRadius: 10,
+  },
+  submitButton: {
+    backgroundColor: '#56CCF2',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
 
 export default RegisterHost;

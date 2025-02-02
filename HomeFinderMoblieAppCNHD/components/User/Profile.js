@@ -6,60 +6,76 @@ import { MyDispatchContext, MyUserContext } from "../../configs/MyUserContext";
 import MyStyles from "../../styles/MyStyles";
 
 const UserProfile = ({ navigation }) => {
-    const user = useContext(MyUserContext);  // Lấy thông tin người dùng từ context
-    const dispatch = useContext(MyDispatchContext);  // Dùng dispatch để cập nhật trạng thái
+    const user = useContext(MyUserContext);  
+    const dispatch = useContext(MyDispatchContext);  
 
     // Hàm đăng xuất
     const logout = async () => {
-        await AsyncStorage.removeItem("token");  // Xóa token khỏi AsyncStorage
-        dispatch({ "type": "logout" });  // Gửi action để cập nhật trạng thái đăng xuất trong context
-    };
-
-    // Hàm đăng ký làm chủ trọ
-    const registerHost = async () => {
-        navigation.navigate("RegisterHost");
+        await AsyncStorage.removeItem("token");  
+        dispatch({ "type": "logout" });  
     };
 
     return (
         <View style={MyStyles.container}>
-            <Card style={MyStyles.profileCard}>
+            <Card style={[MyStyles.profileCard, { elevation: 5 }]}>
                 {/* Hiển thị ảnh đại diện người dùng */}
                 <View style={MyStyles.avatarContainer}>
-                    {/* Kiểm tra ảnh avatar */}
                     <Image 
                         source={user?.avatar ? { uri: user.avatar } : require("../../assets/icon.png")} 
                         style={MyStyles.avatar}
                     />
                 </View>
                 <Card.Content>
-                    {/* Tên người dùng */}
                     <Text style={MyStyles.username}>{user?.username || "Chào người dùng"}</Text>
 
                     {/* Hiển thị thông tin người dùng */}
                     <View style={MyStyles.infoContainer}>
-                        <Text>Email: {user?.email || "Chưa có email"}</Text>
-                        <Text>Số điện thoại: {user?.phone_number || "Chưa có số điện thoại"}</Text>
-                        <Text>Vai trò: {user?.role === "host" ? "Chủ trọ" : "Người thuê trọ"}</Text>
+                        <Text style={MyStyles.infoText}>Email: {user?.email || "Chưa có email"}</Text>
+                        <Text style={MyStyles.infoText}>Số điện thoại: {user?.phone_number || "Chưa có số điện thoại"}</Text>
+                        <Text style={MyStyles.infoText}>Vai trò: {user?.role === "host" ? "Chủ trọ" : "Người thuê trọ"}</Text>
                     </View>
                 </Card.Content>
             </Card>
 
             {/* Nút đăng xuất */}
-            <Button mode="contained-tonal" onPress={logout} style={MyStyles.margin}>
+            <Button 
+                mode="contained-tonal" 
+                onPress={logout} 
+                style={[MyStyles.margin, { backgroundColor: '#FF4B5C', marginTop: 20, marginBottom: 10 }]}
+            >
                 Đăng xuất
             </Button>
 
             {/* Nút đăng ký làm chủ trọ nếu người dùng là tenant */}
             {user?.role === "tenant" && (
-                <Button mode="contained" onPress={registerHost} style={MyStyles.margin}>
+                <Button 
+                    mode="contained" 
+                    onPress={() => navigation.navigate("RegisterHost")} 
+                    style={[MyStyles.margin, { backgroundColor: '#56CCF2', marginBottom: 10 }]}
+                >
                     Đăng ký làm chủ trọ
                 </Button>
             )}
 
             {/* Nút đăng tin cho thuê nếu người dùng là host */}
             {user?.role === "host" && (
-                <Button mode="contained" onPress={() => navigation.navigate("CreateListing")} style={MyStyles.margin}>
+                <Button 
+                    mode="contained" 
+                    onPress={() => navigation.navigate("CreateListing")} 
+                    style={[MyStyles.margin, { backgroundColor: '#56CCF2', marginBottom: 10 }]}
+                >
                     Đăng tin cho thuê
+                </Button>
+            )}
+
+            {/* ✅ Chỉ hiển thị nút này nếu là khách thuê (tenant) */}
+            {user?.role === "tenant" && (
+                <Button 
+                    mode="contained" 
+                    onPress={() => navigation.navigate("PostNotificationScreen")} 
+                    style={[MyStyles.margin, { backgroundColor: '#56CCF2', marginBottom: 10 }]}
+                >
+                    Đăng tin tìm phòng
                 </Button>
             )}
         </View>
