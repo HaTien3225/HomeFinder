@@ -4,6 +4,7 @@ import { Button } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location"; // For location
+import { Picker } from '@react-native-picker/picker'; // Để sử dụng Picker
 import MyStyles from "../../styles/MyStyles";
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker for Google Maps
 
@@ -13,6 +14,8 @@ const CreateListing = ({ navigation }) => {
     const [price, setPrice] = useState("");
     const [address, setAddress] = useState("");
     const [maxOccupants, setMaxOccupants] = useState("1");
+    const [district, setDistrict] = useState(""); // Quận/Huyện
+    const [city, setCity] = useState(""); // Thành phố
     const [image, setImage] = useState(null);
     const [latitude, setLatitude] = useState(null); // For latitude
     const [longitude, setLongitude] = useState(null); // For longitude
@@ -76,7 +79,7 @@ const CreateListing = ({ navigation }) => {
     };
 
     const createListing = async () => {
-        if (!title || !description || !price || !address || !latitude || !longitude) {
+        if (!title || !description || !price || !address || !latitude || !longitude || !district || !city) {
             Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin.");
             return;
         }
@@ -93,6 +96,8 @@ const CreateListing = ({ navigation }) => {
             formData.append("description", description);
             formData.append("price", price);
             formData.append("address", address);
+            formData.append("district", district); // Quận/Huyện
+            formData.append("city", city); // Thành phố
             formData.append("max_occupants", maxOccupants);
             formData.append("latitude", latitude);
             formData.append("longitude", longitude);
@@ -122,6 +127,8 @@ const CreateListing = ({ navigation }) => {
                 setPrice("");
                 setAddress("");
                 setMaxOccupants("1");
+                setDistrict("");
+                setCity("");
                 setImage(null);
 
                 // Chuyển hướng đến màn hình Home sau khi đăng tin thành công
@@ -167,13 +174,65 @@ const CreateListing = ({ navigation }) => {
                     onChangeText={setAddress}
                     style={MyStyles.input}
                 />
-                <TextInput
-                    placeholder="Số người tối đa"
-                    value={maxOccupants}
-                    onChangeText={setMaxOccupants}
+
+                {/* Bộ lọc Quận/Huyện và Thành phố */}
+                <View style={MyStyles.filterRow}>
+                    <Picker
+                        selectedValue={district}
+                        style={MyStyles.input}
+                        onValueChange={(itemValue) => setDistrict(itemValue)}
+                    >
+                        <Picker.Item label="Chọn Quận/Huyện" value="" />
+                                                    <Picker.Item label="Quận 1" value="District1" />
+                                                    <Picker.Item label="Quận 2" value="District2" />
+                                                    <Picker.Item label="Quận 3" value="District3" />
+                                                    <Picker.Item label="Quận 4" value="District4" />
+                                                    <Picker.Item label="Quận 5" value="District5" />
+                                                    <Picker.Item label="Quận 6" value="District6" />
+                                                    <Picker.Item label="Quận 7" value="District7" />
+                                                    <Picker.Item label="Quận 8" value="District8" />
+                                                    <Picker.Item label="Quận 9" value="District9" />
+                                                    <Picker.Item label="Quận 10" value="District10" />
+                                                    <Picker.Item label="Quận 11" value="District11" />
+                                                    <Picker.Item label="Quận 12" value="District12" />
+                                                    <Picker.Item label="Quận Bình Thạnh" value="BinhThanh" />
+                                                    <Picker.Item label="Quận Gò Vấp" value="GoVap" />
+                                                    <Picker.Item label="Quận Tân Bình" value="TanBinh" />
+                                                    <Picker.Item label="Quận Tân Phú" value="TanPhu" />
+                                                    <Picker.Item label="Quận Phú Nhuận" value="PhuNhuan" />
+                                                    <Picker.Item label="Quận Bình Tân" value="BinhTan" />
+                                                    <Picker.Item label="Quận Thủ Đức" value="ThuDuc" />
+                                                    <Picker.Item label="Huyện Củ Chi" value="CuChi" />
+                                                    <Picker.Item label="Huyện Hóc Môn" value="HocMon" />
+                                                    <Picker.Item label="Huyện Nhà Bè" value="NhaBe" />
+                                                    <Picker.Item label="Huyện Bình Chánh" value="BinhChanh" />
+                        
+                    </Picker>
+
+                    <Picker
+                        selectedValue={city}
+                        style={MyStyles.input}
+                        onValueChange={(itemValue) => setCity(itemValue)}
+                    >
+                        <Picker.Item label="Chọn Thành Phố" value="" />
+                        <Picker.Item label="Hà Nội" value="HaNoi" />
+                        <Picker.Item label="Hồ Chí Minh" value="HoChiMinh" />
+                    </Picker>
+                </View>
+
+                {/* Bộ lọc Số người tối đa */}
+                <Picker
+                    selectedValue={maxOccupants}
                     style={MyStyles.input}
-                    keyboardType="numeric"
-                />
+                    onValueChange={(itemValue) => setMaxOccupants(itemValue)}
+                >
+                    <Picker.Item label="Số người tối đa" value="" />
+                    <Picker.Item label="1 người" value="1" />
+                    <Picker.Item label="2 người" value="2" />
+                    <Picker.Item label="3 người" value="3" />
+                    <Picker.Item label="4 người" value="4" />
+                    <Picker.Item label="5 người" value="5" />
+                </Picker>
 
                 <Text>Chọn vị trí:</Text>
                 <MapView
