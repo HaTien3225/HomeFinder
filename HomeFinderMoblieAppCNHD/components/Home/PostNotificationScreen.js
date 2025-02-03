@@ -23,7 +23,7 @@ const PostNotificationScreen = ({ navigation }) => {
       Alert.alert("Lỗi", "Vui lòng nhập ít nhất một tiêu chí tìm kiếm!");
       return;
     }
-
+  
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("access_token");
@@ -32,11 +32,14 @@ const PostNotificationScreen = ({ navigation }) => {
       if (description) url += `description=${description}&`;
       if (priceRange) url += `price_range=${priceRange}&`;
       if (preferredLocation) url += `preferred_location=${preferredLocation}&`;
-
+  
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
+      // Debug để kiểm tra dữ liệu tìm kiếm
+      console.log("Dữ liệu tìm kiếm từ API:", response.data.results); 
+  
       // Điều hướng sang màn hình TenantRequestsScreen và truyền kết quả tìm kiếm
       navigation.navigate("TenantRequests", { searchResults: response.data.results });
     } catch (error) {
@@ -54,7 +57,7 @@ const PostNotificationScreen = ({ navigation }) => {
       <TextInput style={styles.input} placeholder="Vị trí ưu tiên" value={preferredLocation} onChangeText={setPreferredLocation} />
       
       <TouchableOpacity style={styles.button} onPress={handleSearch} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tìm kiếm</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Đăng Tìm kiếm</Text>}
       </TouchableOpacity>
     </View>
   );
