@@ -1,81 +1,73 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, Text, ActivityIndicator, RefreshControl, Button } from "react-native";
+import { View, FlatList, Text, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { Searchbar } from "react-native-paper";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import APIs from "../../configs/APIs"; 
-import MyStyles from "../../styles/MyStyles";
+import { useRoute } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TenantRequestsScreen = ({ navigation }) => {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const [q, setQ] = useState("");
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [q, setQ] = useState("");
 
-    const route = useRoute();
+  const route = useRoute();
+  const searchResults = route.params?.searchResults;
 
-    const loadRequests = async () => {
-        setLoading(true);
-        try {
-            let url = `https://hatien.pythonanywhere.com/tenant-requests/`;
-            if (q) url += `?q=${q}`;
+  const loadRequests = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      const response = await axios.get("https://hatien.pythonanywhere.com/room_requests/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-            console.log("Loading requests from URL:", url);
-            const res = await APIs.get(url);
-            console.log("Dữ liệu từ API:", res.data);
-            setRequests(res.data.results);
-        } catch (error) {
-            console.error("Lỗi tải danh sách:", error.response ? error.response.data : error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      console.log("Dữ liệu từ API:", response.data.results); // Debug API response
+      setRequests(response.data.results);
+    } catch (error) {
+      console.error("Lỗi tải danh sách:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        loadRequests();
-    }, [q]);
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      console.log("Dữ liệu từ tìm kiếm:", searchResults); // Debug dữ liệu tìm kiếm
+      setRequests(searchResults);
+    } else {
+      loadRequests();
+    }
+  }, [searchResults]);
 
-    // Cập nhật danh sách khi có `refresh`
-    useEffect(() => {
-        if (route.params?.refresh) {
-            loadRequests();
-             // Xóa params để tránh load lại liên tục
-             navigation.setParams({ refresh: false });
-        }
-    }, [route.params?.refresh]);
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Searchbar
+        placeholder="Tìm kiếm bài đăng..."
+        value={q}
+        onChangeText={setQ}
+        style={{ marginBottom: 10 }}
+      />
 
-    const refresh = () => {
-        setRefreshing(true);
-        loadRequests().then(() => setRefreshing(false));
-    };
+      {loading && <ActivityIndicator size="large" />}
+      {requests.length === 0 && !loading && <Text>Không có bài đăng nào.</Text>}
 
-    return (
-        <View style={[MyStyles.container, MyStyles.margin]}>
-            <Searchbar
-                placeholder="Tìm bài đăng..."
-                value={q}
-                onChangeText={setQ}
-                style={{ marginBottom: 10 }}
-            />
-
-            {loading && <ActivityIndicator size="large" />}
-            {requests.length === 0 && !loading && <Text>Không có bài đăng nào.</Text>}
-
-            <FlatList
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-                data={requests}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={MyStyles.card}>
-                        <Text style={MyStyles.title}>{item.title}</Text>
-                        <Text style={MyStyles.text}>Khu vực: {item.preferred_location}</Text>
-                        <Text style={MyStyles.text}>Giá tối đa: {item.price_range} VNĐ</Text>
-                        <Text style={MyStyles.text}>Mô tả: {item.description}</Text>
-                    </View>
-                )}
-            />
-            <Button title="Đăng tin tìm phòng" onPress={() => navigation.navigate("PostNotification")} />
-        </View>
-    );
+      <FlatList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
+        data={requests}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={{ padding: 16, backgroundColor: "#fff", marginBottom: 10, borderRadius: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.title}</Text>
+            <Text>Khu vực: {item.preferred_location}</Text>
+            <Text>Giá tối đa: {item.price_range} VNĐ</Text>
+            <Text>Mô tả: {item.description}</Text>
+          </View>
+        )}
+      />
+    </View>
+  );
 };
 
 export default TenantRequestsScreen;
