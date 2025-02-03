@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TextInput, StyleSheet, Alert } from "react-native";
 import { Card, Title, Paragraph, Button, Divider, Avatar, IconButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import * as jwtDecode from "jwt-decode";
+
 
 const API_URL = "https://hatien.pythonanywhere.com"; // Update the API URL
 
@@ -10,10 +12,116 @@ const ListingDetail = ({ route }) => {
   const [comment, setComment] = useState("");  
   const [comments, setComments] = useState([]);  
   const [error, setError] = useState("");  
+  const [isFollowing, setIsFollowing] = useState(false);  // Trạng thái theo dõi
+  const [hostId, setHostId] = useState(null);  // ID của chủ nhà trọ
+  const [followId, setFollowId] = useState(null);  // Lưu ID follow để hủy theo dõi
 
   useEffect(() => {
-    fetchComments();
-  }, []);
+    if (item) {
+      setHostId(item.host?.id);  // Gán ID chủ nhà trọ
+      fetchComments();
+      checkFollowStatus();
+    }
+  }, [item]);
+
+  const getUserIdFromToken = async () => {
+    try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+            throw new Error("Token không tồn tại");
+        }
+        const decoded = jwtDecode(token);
+        return decoded?.user_id || null; 
+    } catch (error) {
+        console.error("Lỗi khi lấy user_id từ token:", error);
+        return null;
+    }
+};
+
+const checkFollowStatus = async () => {
+  try {
+      const userToken = await AsyncStorage.getItem("token");
+      if (!userToken || !hostId) return;
+
+      const api = authApis(userToken);
+      const response = await api.get(endpoints['follow-list']);
+
+      if (response.data.results && Array.isArray(response.data.results)) {
+          const followData = response.data.results.find(follow => follow.host?.id === hostId);
+          if (followData) {
+              setIsFollowing(true);
+              setFollowId(followData.id);
+          } else {
+              setIsFollowing(false);
+          }
+      }
+  } catch (error) {
+      console.error("Lỗi khi kiểm tra trạng thái theo dõi:", error);
+  }
+};
+
+
+
+  
+const handleFollow = async () => {
+  try {
+      const userToken = await AsyncStorage.getItem("token");
+      if (!userToken) {
+          Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
+          return;
+      }
+
+      if (!hostId) {
+          console.error("Không tìm thấy hostId.");
+          return;
+      }
+
+      const api = authApis(userToken);
+      const response = await api.post(endpoints['follow-create'], { host: hostId });
+
+      if (response.status === 201) {
+          setIsFollowing(true);
+          setFollowId(response.data.id);
+          Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
+          checkFollowStatus(); // Cập nhật lại trạng thái theo dõi
+      }
+  } catch (error) {
+      console.error("Lỗi khi theo dõi:", error);
+      Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
+  }
+};
+
+
+const handleUnfollow = async () => {
+  try {
+      const userToken = await AsyncStorage.getItem("token");
+      if (!userToken) {
+          Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
+          return;
+      }
+
+      if (!followId) {
+          console.error("Không tìm thấy followId để hủy theo dõi.");
+          return;
+      }
+
+      const api = authApis(userToken);
+      const response = await api.delete(endpoints['comments-delete-comment'](followId));
+
+      if (response.status === 204) {
+          setIsFollowing(false);
+          setFollowId(null);
+          Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
+          checkFollowStatus(); // Cập nhật lại trạng thái theo dõi
+      }
+  } catch (error) {
+      console.error("Lỗi khi hủy theo dõi:", error);
+      Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại.");
+  }
+};
+
+
+  
 
   const fetchComments = async () => {
     try {
@@ -200,6 +308,15 @@ const ListingDetail = ({ route }) => {
           <Paragraph style={styles.address}>📍 {item.address}</Paragraph>
           <Paragraph style={styles.host}>👤 Chủ nhà: {item.host?.username}</Paragraph>
           <Paragraph style={styles.description}>📝 {sanitizeDescription(item.description)}</Paragraph>
+
+          {/* Nút theo dõi / hủy theo dõi */}
+          <Button 
+            mode="contained" 
+            style={styles.followButton}
+            onPress={isFollowing ? handleUnfollow : handleFollow}
+          >
+            {isFollowing ? "Hủy theo dõi" : "Theo dõi"}
+          </Button>
         </Card.Content>
       </Card>
 
