@@ -16,6 +16,7 @@ import ListingDetail from './components/Home/ListingDetail';
 import UserProfileStack from './components/User/UserProfileStack';  // Đảm bảo nhập đúng đường dẫn
 import PostNotificationScreen from './components/Home/PostNotificationScreen';
 import TenantRequestsScreen from './components/Home/TenantRequestsScreen';
+import TenantRequestsStack from './components/Home/TenantRequestsStack';
 
 
 
@@ -53,6 +54,11 @@ const TabNavigator = () => {
         component={PostNotificationScreen}
         options={{ title: "Yêu Cầu Phòng", tabBarIcon: () => <Icon source="bell" size={20} /> }}
     /> */}
+     <Tab.Screen
+          name="TenantRequests"
+          component={TenantRequestsStack} 
+          options={{ title: "Danh sách tìm phòng", tabBarIcon: () => <Icon source="magnify" size={20} /> }}
+/>
 
    
     {user === null ? (
@@ -76,11 +82,7 @@ const TabNavigator = () => {
           component={UserProfileStack}  // Sử dụng UserProfileStack để bao gồm cả RegisterHost và CreateListing
           options={{ title: "Tài khoản",  headerShown: false, tabBarIcon: () => <Icon source="account-check" size={20} /> }}
         />
-         <Tab.Screen
-        name="TenantRequests"
-        component={TenantRequestsScreen}
-        options={{ title: "Danh sách tìm phòng", tabBarIcon: () => <Icon source="magnify" size={20} /> }}
-    />
+        
       </>
     )}
     </Tab.Navigator>

@@ -18,29 +18,43 @@ const PostNotificationScreen = ({ navigation }) => {
   const [preferredLocation, setPreferredLocation] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    if (!title && !description && !priceRange && !preferredLocation) {
-      Alert.alert("Lỗi", "Vui lòng nhập ít nhất một tiêu chí tìm kiếm!");
+  const handlePostRequest = async () => {
+    if (!title.trim() || !description.trim() || !priceRange.trim() || !preferredLocation.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("access_token");
-      let url = `https://hatien.pythonanywhere.com/room_requests/?`;
-      if (title) url += `title=${title}&`;
-      if (description) url += `description=${description}&`;
-      if (priceRange) url += `price_range=${priceRange}&`;
-      if (preferredLocation) url += `preferred_location=${preferredLocation}&`;
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Lỗi", "Bạn chưa đăng nhập, vui lòng thử lại.");
+        setLoading(false);
+        return;
+      }
 
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
+      const requestData = {
+        title: title.trim(),
+        description: description.trim(),
+        price_range: priceRange.trim(),
+        preferred_location: preferredLocation.trim(),
+      };
+
+      const response = await axios.post("https://hatien.pythonanywhere.com/room_requests/", requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
-      // Điều hướng sang màn hình TenantRequestsScreen và truyền kết quả tìm kiếm
-      navigation.navigate("TenantRequests", { searchResults: response.data.results });
+      if (response.status === 201) {
+        Alert.alert("Thành công", "Tin tìm phòng đã được đăng!");
+        navigation.navigate("TenantRequests");;
+      }
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải kết quả tìm kiếm.");
+      console.error("Lỗi khi đăng tin:", error.response ? error.response.data : error.message);
+      const errorMessage = error.response?.data?.error || "Không thể đăng tin, vui lòng thử lại.";
+      Alert.alert("Lỗi", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -49,12 +63,28 @@ const PostNotificationScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <TextInput style={styles.input} placeholder="Tiêu đề" value={title} onChangeText={setTitle} />
-      <TextInput style={styles.input} placeholder="Mô tả" value={description} onChangeText={setDescription} multiline />
-      <TextInput style={styles.input} placeholder="Khoảng giá" value={priceRange} onChangeText={setPriceRange} />
-      <TextInput style={styles.input} placeholder="Vị trí ưu tiên" value={preferredLocation} onChangeText={setPreferredLocation} />
-      
-      <TouchableOpacity style={styles.button} onPress={handleSearch} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tìm kiếm</Text>}
+      <TextInput
+        style={styles.input}
+        placeholder="Mô tả chi tiết"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Khoảng giá (VD: 2tr-3tr)"
+        value={priceRange}
+        onChangeText={setPriceRange}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Vị trí mong muốn"
+        value={preferredLocation}
+        onChangeText={setPreferredLocation}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handlePostRequest} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Đăng tin</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -72,7 +102,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#27ae60",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",

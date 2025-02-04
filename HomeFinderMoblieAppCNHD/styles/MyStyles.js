@@ -5,17 +5,32 @@ const { width } = Dimensions.get("window");
 const MyStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
     padding: 20,
-    paddingBottom: 30,  // Khoảng cách dưới cùng cho việc cuộn
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: "center",
+  },
+  inputWrapper: {
+    marginBottom: 15,
+  },
+  input: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    marginBottom: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    height: 50,
   },
   row: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-  },
-  margin: {
-    marginHorizontal: 10,
   },
   image: {
     width: width * 0.8,
@@ -48,7 +63,7 @@ const MyStyles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#FF6347",
     paddingVertical: 12,
     borderRadius: 8,
     marginVertical: 10,
@@ -60,19 +75,17 @@ const MyStyles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-  input: {
+  imagePicker: {
+    marginBottom: 20,
+    paddingVertical: 10,
+    borderColor: "#FF6347",
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 12,
     borderRadius: 8,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-    height: 50,
+    alignItems: "center",
   },
-  errorText: {
-    color: "red",
-    fontSize: 14,
-    marginTop: 5,
+  imagePickerText: {
+    color: "#FF6347",
+    fontWeight: "bold",
   },
   avatarContainer: {
     justifyContent: "center",

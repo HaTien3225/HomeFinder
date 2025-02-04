@@ -206,7 +206,7 @@ const CreateListing = ({ navigation }) => {
                                                     <Picker.Item label="Huyện Hóc Môn" value="HocMon" />
                                                     <Picker.Item label="Huyện Nhà Bè" value="NhaBe" />
                                                     <Picker.Item label="Huyện Bình Chánh" value="BinhChanh" />
-                        
+                        {/* Add more districts here */}
                     </Picker>
 
                     <Picker

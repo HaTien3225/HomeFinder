@@ -155,6 +155,28 @@ const Home = () => {
                             <Picker.Item label="Chọn Quận/Huyện" value="" />
                             <Picker.Item label="Quận 1" value="District1" />
                             <Picker.Item label="Quận 2" value="District2" />
+                             <Picker.Item label="Quận 3" value="District3" />
+                                                                                <Picker.Item label="Quận 4" value="District4" />
+                                                                                <Picker.Item label="Quận 5" value="District5" />
+                                                                                <Picker.Item label="Quận 6" value="District6" />
+                                                                                <Picker.Item label="Quận 7" value="District7" />
+                                                                                <Picker.Item label="Quận 8" value="District8" />
+                                                                                <Picker.Item label="Quận 9" value="District9" />
+                                                                                <Picker.Item label="Quận 10" value="District10" />
+                                                                                <Picker.Item label="Quận 11" value="District11" />
+                                                                                <Picker.Item label="Quận 12" value="District12" />
+                                                                                <Picker.Item label="Quận Bình Thạnh" value="BinhThanh" />
+                                                                                <Picker.Item label="Quận Gò Vấp" value="GoVap" />
+                                                                                <Picker.Item label="Quận Tân Bình" value="TanBinh" />
+                                                                                <Picker.Item label="Quận Tân Phú" value="TanPhu" />
+                                                                                <Picker.Item label="Quận Phú Nhuận" value="PhuNhuan" />
+                                                                                <Picker.Item label="Quận Bình Tân" value="BinhTan" />
+                                                                                <Picker.Item label="Quận Thủ Đức" value="ThuDuc" />
+                                                                                <Picker.Item label="Huyện Củ Chi" value="CuChi" />
+                                                                                <Picker.Item label="Huyện Hóc Môn" value="HocMon" />
+                                                                                <Picker.Item label="Huyện Nhà Bè" value="NhaBe" />
+                                                                                <Picker.Item label="Huyện Bình Chánh" value="BinhChanh" />
+                                                    
                         </Picker>
 
                         <Picker
