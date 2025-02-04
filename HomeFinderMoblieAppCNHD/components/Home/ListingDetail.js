@@ -484,6 +484,7 @@ const styles = StyleSheet.create({
   commentButton: {
     marginTop: 15,
     backgroundColor: "#FF6347",
+    marginBottom: 30,
   },
   map: {
     height: 300,  // Set the height of the map

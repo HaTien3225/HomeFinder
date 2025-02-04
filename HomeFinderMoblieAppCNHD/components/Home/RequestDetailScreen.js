@@ -65,6 +65,8 @@ const RequestDetailScreen = ({ route }) => {
           };
         })
       );
+       // Sắp xếp các bình luận theo thời gian tạo (giả sử comment có trường created_at)
+       updatedComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setComments(updatedComments); // Cập nhật tất cả các bình luận
     } catch (error) {
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
   commentUsername: { fontSize: 16, fontWeight: "bold" },
   commentText: { fontSize: 14, color: "#444" },
   commentInput: { marginTop: 15, padding: 10, borderWidth: 1, borderColor: "#ddd", borderRadius: 5, backgroundColor: "white" },
-  commentButton: { marginTop: 15, backgroundColor: "#FF6347" },
+  commentButton: { marginTop: 15, backgroundColor: "#FF6347", marginBottom: 30, },
 });
 
 export default RequestDetailScreen;
