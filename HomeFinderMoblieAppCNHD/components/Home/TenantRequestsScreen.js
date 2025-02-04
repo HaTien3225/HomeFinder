@@ -15,11 +15,17 @@ const TenantRequestsScreen = ({ navigation }) => {
   const route = useRoute();
   const searchResults = route.params?.searchResults;
 
-  const loadRequests = async () => {
+  const loadRequests = async (searchTerm = "") => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await axios.get("https://hatien.pythonanywhere.com/room_requests/", {
+      let url = "https://hatien.pythonanywhere.com/room_requests/";
+      if (searchTerm) {
+        // Thêm tham số tìm kiếm vào URL khi có từ khóa tìm kiếm
+        url = `${url}?q=${searchTerm}`;
+      }
+
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -38,19 +44,29 @@ const TenantRequestsScreen = ({ navigation }) => {
       console.log("Dữ liệu từ tìm kiếm:", searchResults); // Debug dữ liệu tìm kiếm
       setRequests(searchResults);
     } else {
-      loadRequests();
+      loadRequests(); // Tải yêu cầu khi không có kết quả tìm kiếm
     }
   }, [searchResults]);
 
+  const handleSearch = (searchText) => {
+    setQ(searchText);
+    loadRequests(searchText); // Lọc yêu cầu khi người dùng nhập từ khóa tìm kiếm
+  };
+
   return (
     <View style={styles.container}>
-      <Searchbar placeholder="Tìm kiếm bài đăng..." value={q} onChangeText={setQ} style={styles.searchbar} />
+      <Searchbar
+        placeholder="Tìm kiếm bài đăng..."
+        value={q}
+        onChangeText={handleSearch}
+        style={styles.searchbar}
+      />
 
       {loading && <ActivityIndicator size="large" />}
       {requests.length === 0 && !loading && <Text style={styles.noData}>Không có bài đăng nào.</Text>}
 
       <FlatList
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadRequests(q)} />}
         data={requests}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <TenantRequestItem item={item} />}
