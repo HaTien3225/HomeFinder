@@ -51,24 +51,28 @@ const checkFollowStatus = async () => {
     const userToken = await AsyncStorage.getItem("token");
     if (!userToken || !hostId) return;
 
-    const response = await fetch(`${API_URL}/follow/`, {
+    const response = await fetch(`${API_URL}/follow/check_follow/?host=${hostId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${userToken}`,
       }
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Lỗi khi kiểm tra trạng thái theo dõi.');
+    }
+
     const data = await response.json();
-    const followData = data.results.find(follow => follow.host?.id === hostId);
-    
-    if (followData) {
+    if (data.followed) {
       setIsFollowing(true);
-      setFollowId(followData.id);
+      setFollowId(data.followId);  // Lưu lại ID của follow để sử dụng cho việc hủy theo dõi
     } else {
       setIsFollowing(false);
     }
   } catch (error) {
     console.error("Lỗi khi kiểm tra trạng thái theo dõi:", error);
+    Alert.alert("Lỗi", error.message || "Không thể kiểm tra trạng thái theo dõi.");
   }
 };
 
@@ -82,29 +86,31 @@ const handleFollow = async () => {
 
     if (!hostId) {
       console.error("Không tìm thấy hostId.");
+      Alert.alert("Lỗi", "Không thể tìm thấy thông tin chủ nhà.");
       return;
     }
 
-    const response = await fetch(`${API_URL}/follow//follow/`, {
+    const response = await fetch(`${API_URL}/follow/follow/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${userToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ host: hostId })
+      body: JSON.stringify({ host: hostId })  // Gửi hostId trong body
     });
 
-    if (response.status === 201) {
-      const followData = await response.json();
-      setIsFollowing(true);
-      setFollowId(followData.id);
-      Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
-    } else {
-      Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Không thể theo dõi. Vui lòng thử lại!");
     }
+
+    const followData = await response.json();
+    setIsFollowing(true);
+    setFollowId(followData.id);  // Lưu lại ID của follow
+    Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
   } catch (error) {
     console.error("Lỗi khi theo dõi:", error);
-    Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
+    Alert.alert("Lỗi", error.message || "Không thể theo dõi. Vui lòng thử lại!");
   }
 };
 
@@ -116,32 +122,37 @@ const handleUnfollow = async () => {
       return;
     }
 
-    if (!followId) {
-      console.error("Không tìm thấy followId để hủy theo dõi.");
+    if (!hostId) {
+      console.error("Không tìm thấy hostId để hủy theo dõi.");
+      Alert.alert("Lỗi", "Không thể hủy theo dõi vì không tìm thấy thông tin chủ nhà.");
       return;
     }
 
-    const response = await fetch(`${API_URL}/follow/unfollow${followId}/`, {
+    console.log("Gửi yêu cầu hủy theo dõi với hostId: ", hostId);
+
+    const response = await fetch(`${API_URL}/follow/unfollow/`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${userToken}`,
-      }
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ host: hostId })  // Gửi hostId trong body
     });
 
-    if (response.status === 204) {
-      setIsFollowing(false);
-      setFollowId(null);
-      Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
-    } else {
-      Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại.");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Không thể hủy theo dõi. Vui lòng thử lại.");
     }
+
+    setIsFollowing(false);
+    setFollowId(null);  // Xóa ID của follow sau khi hủy theo dõi
+    Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
   } catch (error) {
-    console.error("Lỗi khi hủy theo dõi:", error);
-    Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại.");
+    console.error("Lỗi khi gửi yêu cầu hủy theo dõi:", error);
+    Alert.alert("Lỗi", error.message || "Không thể hủy theo dõi. Vui lòng kiểm tra kết nối mạng và thử lại.");
   }
 };
 
-  
 
   const fetchComments = async () => {
     try {

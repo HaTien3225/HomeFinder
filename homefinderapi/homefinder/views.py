@@ -1,7 +1,7 @@
 from django.contrib.admin.templatetags.admin_list import pagination
 from django.db.models import Count, Prefetch
 from oauth2_provider.contrib.rest_framework import permissions
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from . import paginators
 from .models import User, Listing, Follow, Comment, Notification, RoomRequest, Chat, Statistics
 from .paginators import ItemPaginator
-from .serializers import UserSerializer, ListingSerializer, FollowSerializer, CommentSerializer, NotificationSerializer, RoomRequestSerializer, ChatSerializer, StatisticsSerializer
+from .serializers import UserSerializer, ListingSerializer, FollowSerializer, CommentSerializer, NotificationSerializer, \
+    RoomRequestSerializer, ChatSerializer, StatisticsSerializer
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
@@ -144,7 +145,6 @@ class ListingViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         Lưu listing với host là người dùng hiện tại.
         """
         serializer.save(host=self.request.user)
-
 
 
 class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
@@ -288,8 +288,6 @@ class FollowViewSet(viewsets.ViewSet, generics.ListAPIView):
         return Response({"message": "You have unfollowed this host."}, status=status.HTTP_204_NO_CONTENT)
 
 
-
-
 # Notification ViewSet
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Notification.objects.all()
@@ -305,6 +303,7 @@ class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 # Chat ViewSet
 class ChatViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
@@ -327,6 +326,7 @@ class ChatViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
+
 
 # RoomRequest ViewSet
 class RoomRequestViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
@@ -354,6 +354,7 @@ class RoomRequestViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(tenant=self.request.user)
+
 
 # Statistics ViewSet
 class StatisticsViewSet(viewsets.ViewSet, generics.ListAPIView):
