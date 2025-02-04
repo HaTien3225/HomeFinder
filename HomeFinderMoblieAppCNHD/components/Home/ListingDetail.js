@@ -48,86 +48,98 @@ const ListingDetail = ({ route }) => {
 
 const checkFollowStatus = async () => {
   try {
-      const userToken = await AsyncStorage.getItem("token");
-      if (!userToken || !hostId) return;
+    const userToken = await AsyncStorage.getItem("token");
+    if (!userToken || !hostId) return;
 
-      const api = authApis(userToken);
-      const response = await api.get(endpoints['follow-list']);
-
-      if (response.data.results && Array.isArray(response.data.results)) {
-          const followData = response.data.results.find(follow => follow.host?.id === hostId);
-          if (followData) {
-              setIsFollowing(true);
-              setFollowId(followData.id);
-          } else {
-              setIsFollowing(false);
-          }
+    const response = await fetch(`${API_URL}/follow/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
       }
+    });
+
+    const data = await response.json();
+    const followData = data.results.find(follow => follow.host?.id === hostId);
+    
+    if (followData) {
+      setIsFollowing(true);
+      setFollowId(followData.id);
+    } else {
+      setIsFollowing(false);
+    }
   } catch (error) {
-      console.error("Lỗi khi kiểm tra trạng thái theo dõi:", error);
+    console.error("Lỗi khi kiểm tra trạng thái theo dõi:", error);
   }
 };
 
-
-
-  
 const handleFollow = async () => {
   try {
-      const userToken = await AsyncStorage.getItem("token");
-      if (!userToken) {
-          Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
-          return;
-      }
+    const userToken = await AsyncStorage.getItem("token");
+    if (!userToken) {
+      Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
+      return;
+    }
 
-      if (!hostId) {
-          console.error("Không tìm thấy hostId.");
-          return;
-      }
+    if (!hostId) {
+      console.error("Không tìm thấy hostId.");
+      return;
+    }
 
-      const api = authApis(userToken);
-      const response = await api.post(endpoints['follow-create'], { host: hostId });
+    const response = await fetch(`${API_URL}/follow//follow/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ host: hostId })
+    });
 
-      if (response.status === 201) {
-          setIsFollowing(true);
-          setFollowId(response.data.id);
-          Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
-          checkFollowStatus(); // Cập nhật lại trạng thái theo dõi
-      }
-  } catch (error) {
-      console.error("Lỗi khi theo dõi:", error);
+    if (response.status === 201) {
+      const followData = await response.json();
+      setIsFollowing(true);
+      setFollowId(followData.id);
+      Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
+    } else {
       Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
+    }
+  } catch (error) {
+    console.error("Lỗi khi theo dõi:", error);
+    Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
   }
 };
-
 
 const handleUnfollow = async () => {
   try {
-      const userToken = await AsyncStorage.getItem("token");
-      if (!userToken) {
-          Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
-          return;
-      }
+    const userToken = await AsyncStorage.getItem("token");
+    if (!userToken) {
+      Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
+      return;
+    }
 
-      if (!followId) {
-          console.error("Không tìm thấy followId để hủy theo dõi.");
-          return;
-      }
+    if (!followId) {
+      console.error("Không tìm thấy followId để hủy theo dõi.");
+      return;
+    }
 
-      const api = authApis(userToken);
-      const response = await api.delete(endpoints['comments-delete-comment'](followId));
-
-      if (response.status === 204) {
-          setIsFollowing(false);
-          setFollowId(null);
-          Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
-          checkFollowStatus(); // Cập nhật lại trạng thái theo dõi
+    const response = await fetch(`${API_URL}/follow/unfollow${followId}/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
       }
-  } catch (error) {
-      console.error("Lỗi khi hủy theo dõi:", error);
+    });
+
+    if (response.status === 204) {
+      setIsFollowing(false);
+      setFollowId(null);
+      Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
+    } else {
       Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại.");
+    }
+  } catch (error) {
+    console.error("Lỗi khi hủy theo dõi:", error);
+    Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại.");
   }
 };
-
 
   
 

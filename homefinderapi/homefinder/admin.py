@@ -90,15 +90,30 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'email', 'role', 'is_active', 'is_staff')
     search_fields = ('email', 'username')
     list_filter = ('role', 'is_active', 'is_staff')
-    readonly_fields = ['avatar_preview']
+    readonly_fields = ['avatar_preview', 'image_1_preview', 'image_2_preview', 'image_3_preview']
 
     def avatar_preview(self, obj):
-        if obj.avatar:
-            # Hiển thị ảnh avatar
-            return mark_safe(f"<img src='{obj.avatar.url}' width='120' />")
-        return "No avatar available"
+        return self._get_image_preview(obj.avatar)
 
-    avatar_preview.short_description = 'Avatar'  # Tên cột hiển thị trong Admin
+    def image_1_preview(self, obj):
+        return self._get_image_preview(obj.image_1)
+
+    def image_2_preview(self, obj):
+        return self._get_image_preview(obj.image_2)
+
+    def image_3_preview(self, obj):
+        return self._get_image_preview(obj.image_3)
+
+    def _get_image_preview(self, image):
+        if image:
+            return mark_safe(f"<img src='{image.url}' width='120' />")
+        return "No image available"
+
+    avatar_preview.short_description = 'Avatar'
+    image_1_preview.short_description = 'Image 1'
+    image_2_preview.short_description = 'Image 2'
+    image_3_preview.short_description = 'Image 3'
+
 
 class ListingForm(forms.ModelForm):
     description = forms.CharField(widget=CKEditorUploadingWidget)
@@ -109,16 +124,20 @@ class ListingForm(forms.ModelForm):
 
 
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'price', 'host', 'is_approved', 'is_verified')
-    search_fields = ('title', 'address', 'district')
-    list_filter = ('is_approved', 'is_verified', 'created_date')
-    ordering = ('-created_date',)
+    list_display = ('title', 'price', 'host', 'district', 'city', 'is_approved', 'is_verified')
+    search_fields = ('title', 'address', 'district', 'city')
+    list_filter = ('is_approved', 'is_verified', 'district', 'city')
+    ordering = ('-created_date',)  # Thay 'created_date' bằng 'id' nếu model không có 'created_date'
     form = ListingForm
-    readonly_fields = ['avatar']
+    readonly_fields = ['image_preview']
 
-    def avatar(self, Listing):
-        if Listing:
-            return mark_safe(f"<img src='/static/{Listing.image.name}' width='120' />")
+    def image_preview(self, obj):
+        if obj.image:
+            return mark_safe(f"<img src='{obj.image.url}' width='120' />")
+        return "Chưa có ảnh"
+
+    image_preview.short_description = "Xem trước ảnh"
+
 
 
 class FollowAdmin(admin.ModelAdmin):
@@ -136,9 +155,9 @@ class CommentForm(forms.ModelForm):
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('listing', 'user', 'created_date')
+    list_display = ('listing', 'user', 'created_at')  # Đổi 'created_date' -> 'created_at'
     search_fields = ('listing__title', 'user__email', 'content')
-    list_filter = ('created_date',)
+    list_filter = ('created_at',)  # Đổi 'created_date' -> 'created_at'
     form = CommentForm
 
 

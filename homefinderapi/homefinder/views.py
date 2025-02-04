@@ -12,13 +12,13 @@ from .paginators import ItemPaginator
 from .serializers import UserSerializer, ListingSerializer, FollowSerializer, CommentSerializer, NotificationSerializer, RoomRequestSerializer, ChatSerializer, StatisticsSerializer
 
 
-# User ViewSet
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     pagination_class = paginators.ItemPaginator
     parser_classes = [MultiPartParser, FormParser]
 
+    # Existing actions
     @action(methods=['get'], url_path='current-user', detail=False, permission_classes=[permissions.IsAuthenticated])
     def get_user(self, request):
         return Response(UserSerializer(request.user).data)
@@ -39,19 +39,76 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
         user.delete()
         return Response({"message": "Tài khoản đã được xóa"})
 
-# Listing ViewSet
+    # New action to get user by id
+    @action(methods=['get'], detail=True, url_path='get-user-by-id', permission_classes=[IsAuthenticated])
+    def get_user_by_id(self, request, pk=None):
+        try:
+            user = User.objects.get(pk=pk)
+            return Response(UserSerializer(user).data)
+        except User.DoesNotExist:
+            return Response({"error": "Người dùng không tồn tại"}, status=404)
+
+
 class ListingViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
-    pagination_class = paginators.ItemPaginator
+    pagination_class = ItemPaginator
+
+    def get_queryset(self):
+        query = self.queryset
+
+        # Lọc theo từ khóa
+        kw = self.request.query_params.get('q')
+        if kw:
+            query = query.filter(title__icontains=kw)
+
+        # Lọc theo vị trí (địa chỉ)
+        location = self.request.query_params.get('address')
+        if location:
+            query = query.filter(address__icontains=location)
+
+        # Lọc theo quận/huyện
+        district = self.request.query_params.get('district')
+        if district:
+            query = query.filter(district=district)
+
+        # Lọc theo thành phố
+        city = self.request.query_params.get('city')
+        if city:
+            query = query.filter(city=city)
+
+        # Lọc theo giá
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        if min_price:
+            query = query.filter(price__gte=min_price)
+        if max_price:
+            query = query.filter(price__lte=max_price)
+
+        # Lọc theo số người tối đa
+        max_occupants = self.request.query_params.get('max_occupants')
+        if max_occupants:
+            query = query.filter(max_occupants=max_occupants)
+
+        return query
 
     @action(methods=['get'], url_path='comments', detail=True)
-    def get_comment(self, request, pk):
-        comments = self.get_object().comments.select_related('user').filter(active=True)
-        return Response(CommentSerializer(comments, many=True).data)
+    def get_comments(self, request, pk=None):
+        """
+        Lấy bình luận của một listing cụ thể.
+        """
+        listing = self.get_object()
+        comments = Comment.objects.filter(listing=listing, active=True).select_related('user')
+
+        # Lọc và trả về bình luận cho listing
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
 
     @action(methods=['post'], detail=True, url_path='favorite', permission_classes=[IsAuthenticated])
-    def favorite_listing(self, request, pk):
+    def favorite_listing(self, request, pk=None):
+        """
+        Thêm hoặc xóa listing khỏi danh sách yêu thích của người dùng.
+        """
         listing = self.get_object()
         user = request.user
         if listing.favorites.filter(id=user.id).exists():
@@ -62,14 +119,20 @@ class ListingViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
             return Response({"message": "Đã thêm vào yêu thích"})
 
     @action(methods=['post'], detail=True, url_path='report', permission_classes=[IsAuthenticated])
-    def report_listing(self, request, pk):
+    def report_listing(self, request, pk=None):
+        """
+        Báo cáo listing với lý do cụ thể.
+        """
         listing = self.get_object()
         reason = request.data.get('reason', '')
-        # Xử lý logic báo cáo
+        # Xử lý logic báo cáo (có thể lưu vào cơ sở dữ liệu hoặc gửi thông báo)
         return Response({"message": "Báo cáo đã được gửi", "reason": reason})
 
     @action(methods=['delete'], detail=True, url_path='delete', permission_classes=[IsAuthenticated])
-    def delete_listing(self, request, pk):
+    def delete_listing(self, request, pk=None):
+        """
+        Xóa một listing nếu người dùng là chủ sở hữu.
+        """
         listing = self.get_object()
         if listing.host != request.user:
             return Response({"error": "Không có quyền xóa listing này"}, status=403)
@@ -77,31 +140,18 @@ class ListingViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return Response({"message": "Listing đã được xóa"})
 
     def perform_create(self, serializer):
+        """
+        Lưu listing với host là người dùng hiện tại.
+        """
         serializer.save(host=self.request.user)
 
-    def get_queryset(self):
-        query = self.queryset
 
-        kw = self.request.query_params.get('q')
-        if kw:
-            query = query.filter(title__icontains=kw)
 
-        return query
-
-# Follow ViewSet
-class FollowViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
-    pagination_class = paginators.ItemPaginator
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-# Comment ViewSet
 class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Comment.objects.select_related('user', 'listing', 'room_request', 'parent_comment')
     serializer_class = CommentSerializer
     pagination_class = ItemPaginator
+    permission_classes = [IsAuthenticated]  # Đảm bảo người dùng phải đăng nhập
 
     def get_queryset(self):
         """
@@ -127,6 +177,9 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         """
         Kiểm tra và lưu comment mới, hỗ trợ phản hồi bình luận.
         """
+        if not self.request.user.is_authenticated:
+            return Response({"error": "Bạn cần đăng nhập để tạo bình luận"}, status=401)
+
         listing_id = self.request.data.get("listing")
         room_request_id = self.request.data.get("room_request")
         parent_comment_id = self.request.data.get("parent_comment")
@@ -147,7 +200,7 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
             return Response({"error": "Cần có Listing hoặc RoomRequest để tạo bình luận"}, status=400)
 
     @action(methods=["patch"], detail=True, url_path="update", permission_classes=[IsAuthenticated])
-    def update_comment(self, request, pk):
+    def update_comment(self, request, pk=None):
         """
         Cập nhật bình luận nếu người dùng là chủ sở hữu.
         """
@@ -161,7 +214,7 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return Response(serializer.data)
 
     @action(methods=["delete"], detail=True, url_path="delete", permission_classes=[IsAuthenticated])
-    def delete_comment(self, request, pk):
+    def delete_comment(self, request, pk=None):
         """
         Xóa bình luận nếu người dùng là chủ sở hữu.
         """
@@ -171,6 +224,71 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
         comment.delete()
         return Response({"message": "Bình luận đã bị xóa"})
+
+
+class FollowViewSet(viewsets.ViewSet, generics.ListAPIView):
+    """
+    A viewset for creating and listing follows.
+    """
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+    pagination_class = paginators.ItemPaginator
+    permission_classes = [IsAuthenticated]  # Chỉ cho phép những người đã đăng nhập
+
+    def perform_create(self, serializer):
+        # Lưu đối tượng Follow với user hiện tại
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['POST'])
+    def follow(self, request):
+        """
+        API để theo dõi chủ nhà trọ.
+        """
+        host_id = request.data.get('host_id')
+
+        if not host_id:
+            return Response({"error": "Host ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            host = User.objects.get(id=host_id)
+        except User.DoesNotExist:
+            return Response({"error": "Host not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Kiểm tra nếu người dùng đã theo dõi host này
+        existing_follow = Follow.objects.filter(user=request.user, host=host).first()
+        if existing_follow:
+            return Response({"message": "You are already following this host."}, status=status.HTTP_200_OK)
+
+        # Tạo đối tượng Follow mới
+        follow = Follow.objects.create(user=request.user, host=host)
+        return Response({"message": "You are now following this host."}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['DELETE'])
+    def unfollow(self, request):
+        """
+        API để hủy theo dõi chủ nhà trọ.
+        """
+        host_id = request.data.get('host_id')
+
+        if not host_id:
+            return Response({"error": "Host ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            host = User.objects.get(id=host_id)
+        except User.DoesNotExist:
+            return Response({"error": "Host not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Kiểm tra nếu người dùng có đang theo dõi chủ nhà này không
+        follow = Follow.objects.filter(user=request.user, host=host).first()
+        if not follow:
+            return Response({"error": "You are not following this host."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Hủy theo dõi
+        follow.delete()
+        return Response({"message": "You have unfollowed this host."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
 
 # Notification ViewSet
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -215,6 +333,16 @@ class RoomRequestViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = RoomRequest.objects.all()
     serializer_class = RoomRequestSerializer
     pagination_class = paginators.ItemPaginator
+
+    def get_queryset(self):
+        query = self.queryset
+
+        # Lọc theo từ khóa
+        kw = self.request.query_params.get('q')
+        if kw:
+            query = query.filter(title__icontains=kw)
+
+        return query
 
     @action(methods=['delete'], detail=True, url_path='cancel', permission_classes=[IsAuthenticated])
     def cancel_request(self, request, pk):

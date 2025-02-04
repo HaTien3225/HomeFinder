@@ -49,6 +49,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    address = models.CharField(max_length=255, blank=True, null=True)
+
+    # Multiple image fields for user
+    image_1 = CloudinaryField('image_1', null=True, blank=True)
+    image_2 = CloudinaryField('image_2', null=True, blank=True)
+    image_3 = CloudinaryField('image_3', null=True, blank=True)
 
     objects = UserManager()
 
@@ -67,21 +73,21 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-
-class Listing(BaseModel):
+class Listing(models.Model):
     title = models.CharField(max_length=255)
     description = RichTextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     address = models.CharField(max_length=255)
-    district = models.CharField(max_length=255, blank=True, null=True)
-    city = models.CharField(max_length=100)
+    district = models.CharField(max_length=100, blank=True, null=True)  # Quận/Huyện
+    city = models.CharField(max_length=100, blank=True, null=True)  # Thành phố
     max_occupants = models.IntegerField(default=1)
     longitude = models.FloatField()
     latitude = models.FloatField()
-    images = CloudinaryField('images', null=True, blank=True)
+    image = CloudinaryField('image', null=True, blank=True)
     host = models.ForeignKey(User, related_name='listings', on_delete=models.CASCADE)
     is_approved = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    created_date = models.DateTimeField(auto_now_add=True)  # Thêm trường này
 
     def __str__(self):
         return self.title
@@ -105,16 +111,22 @@ class RoomRequest(BaseModel):
 
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    listing = models.ForeignKey("Listing", on_delete=models.CASCADE, null=True, blank=True)
-    room_request = models.ForeignKey("RoomRequest", on_delete=models.CASCADE, null=True, blank=True)
-    parent_comment = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
     content = models.TextField()
-    active = models.BooleanField(default=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    listing = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name="comments",null=True, blank=True)
+    parent_comment = models.ForeignKey(
+        'self',  # Quan hệ đệ quy
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(default=True)
+    room_request = models.ForeignKey('RoomRequest', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.created_at}"
+        return f"Comment by {self.user} on {self.listing}"
 
 
 class Notification(BaseModel):
