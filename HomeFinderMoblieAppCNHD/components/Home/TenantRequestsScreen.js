@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, Text, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, FlatList, ActivityIndicator, RefreshControl, Alert, StyleSheet } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import TenantRequestItem from "./TenantRequestItem";
 
 const TenantRequestsScreen = ({ navigation }) => {
   const [requests, setRequests] = useState([]);
@@ -14,28 +15,14 @@ const TenantRequestsScreen = ({ navigation }) => {
   const route = useRoute();
   const searchResults = route.params?.searchResults;
 
-  useEffect(() => {
-    // Kiểm tra dữ liệu tìm kiếm từ route params
-    console.log("Dữ liệu từ route params:", searchResults); // Debug
-  
-    if (searchResults && searchResults.length > 0) {
-      // Nếu có dữ liệu tìm kiếm, cập nhật state
-      setRequests(searchResults);
-    } else {
-      // Nếu không có dữ liệu tìm kiếm, gọi API để tải lại dữ liệu
-      loadRequests();
-    }
-  }, [searchResults]);
-  
-  // Hàm tải dữ liệu từ API nếu không có kết quả tìm kiếm
   const loadRequests = async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("access_token");
+      const token = await AsyncStorage.getItem("token");
       const response = await axios.get("https://hatien.pythonanywhere.com/room_requests/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       console.log("Dữ liệu từ API:", response.data.results); // Debug API response
       setRequests(response.data.results);
     } catch (error) {
@@ -46,38 +33,36 @@ const TenantRequestsScreen = ({ navigation }) => {
     }
   };
 
+  useEffect(() => {
+    if (searchResults && searchResults.length > 0) {
+      console.log("Dữ liệu từ tìm kiếm:", searchResults); // Debug dữ liệu tìm kiếm
+      setRequests(searchResults);
+    } else {
+      loadRequests();
+    }
+  }, [searchResults]);
+
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Searchbar
-        placeholder="Tìm kiếm bài đăng..."
-        value={q}
-        onChangeText={setQ}
-        style={{ marginBottom: 10 }}
-      />
+    <View style={styles.container}>
+      <Searchbar placeholder="Tìm kiếm bài đăng..." value={q} onChangeText={setQ} style={styles.searchbar} />
 
       {loading && <ActivityIndicator size="large" />}
-      {requests.length === 0 && !loading && <Text>Không có bài đăng nào.</Text>}
+      {requests.length === 0 && !loading && <Text style={styles.noData}>Không có bài đăng nào.</Text>}
 
       <FlatList
-         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
-         data={requests}
-         keyExtractor={(item) => item.id.toString()}
-         renderItem={({ item }) => (
-         <View style={{ padding: 16, backgroundColor: "#fff", marginBottom: 10, borderRadius: 8 }}>
-           <Text style={{ fontSize: 18, fontWeight: "bold" }}>{item.title}</Text>
-           <Text>Khu vực: {item.preferred_location}</Text>
-           <Text>Giá tối đa: {item.price_range} VNĐ</Text>
-           <Text>Mô tả: {item.description}</Text>
-         </View>
-  )}
-/>
-
-{/* Thông báo khi không có bài đăng */}
-{requests.length === 0 && !loading && (
-  <Text style={{ textAlign: 'center', marginTop: 20 }}>Không có bài đăng nào.</Text>
-)}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadRequests} />}
+        data={requests}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <TenantRequestItem item={item} />}
+      />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, backgroundColor: "#f8f8f8" },
+  searchbar: { marginBottom: 10 },
+  noData: { textAlign: "center", fontSize: 16, marginTop: 20, color: "#888" },
+});
 
 export default TenantRequestsScreen;
