@@ -17,6 +17,7 @@ import UserProfileStack from './components/User/UserProfileStack';  // Đảm b�
 import PostNotificationScreen from './components/Home/PostNotificationScreen';
 import TenantRequestsScreen from './components/Home/TenantRequestsScreen';
 import TenantRequestsStack from './components/Home/TenantRequestsStack';
+import AuthStack from './components/Home/AuthStack';
 
 
 
@@ -48,12 +49,6 @@ const TabNavigator = () => {
       component={StackNavigator}
       options={{ title: "Màn hình chính", tabBarIcon: () => <Icon source="home-account" size={20} /> }}
     />
-     {/* 🟢 Thêm tab "Đăng Thông Báo" ra ngoài điều kiện, ai cũng thấy */}
-    {/* <Tab.Screen
-        name="Room request"
-        component={PostNotificationScreen}
-        options={{ title: "Yêu Cầu Phòng", tabBarIcon: () => <Icon source="bell" size={20} /> }}
-    /> */}
      <Tab.Screen
           name="TenantRequests"
           component={TenantRequestsStack} 
@@ -63,15 +58,10 @@ const TabNavigator = () => {
    
     {user === null ? (
       <>
-        <Tab.Screen
+        <Tab.Screen 
           name="login"
-          component={Login}
-          options={{ title: "Đăng nhập", tabBarIcon: () => <Icon source="account-check" size={20} /> }}
-        />
-        <Tab.Screen
-          name="register"
-          component={Register}
-          options={{ title: "Đăng ký", tabBarIcon: () => <Icon source="account-plus" size={20} /> }}
+          component={AuthStack}
+          options={{ title: "Đăng nhập", headerShown: false, tabBarIcon: () => <Icon source="account-check" size={20} /> }}
         />
         
       </>

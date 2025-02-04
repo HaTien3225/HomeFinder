@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TextInput, StyleSheet, Alert } from "react-nati
 import { Card, Title, Paragraph, Button, Divider, Avatar, IconButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import * as jwtDecode from "jwt-decode";
-
+import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker for Google Maps
 
 const API_URL = "https://hatien.pythonanywhere.com"; // Update the API URL
 
@@ -15,14 +15,22 @@ const ListingDetail = ({ route }) => {
   const [isFollowing, setIsFollowing] = useState(false);  // Trạng thái theo dõi
   const [hostId, setHostId] = useState(null);  // ID của chủ nhà trọ
   const [followId, setFollowId] = useState(null);  // Lưu ID follow để hủy theo dõi
+  const [latitude, setLatitude] = useState(null); // For latitude
+  const [longitude, setLongitude] = useState(null); // For longitude
+
 
   useEffect(() => {
     if (item) {
       setHostId(item.host?.id);  // Gán ID chủ nhà trọ
+      setLatitude(item.latitude); // Gán latitude từ item
+      setLongitude(item.longitude); // Gán longitude từ item
+     
       fetchComments();
       checkFollowStatus();
     }
   }, [item]);
+  
+  
 
   const getUserIdFromToken = async () => {
     try {
@@ -320,6 +328,21 @@ const handleUnfollow = async () => {
         </Card.Content>
       </Card>
 
+       {/* MapView for showing location */}
+    {latitude && longitude ? (
+      <MapView
+        style={styles.map}
+        initialRegion={{
+        latitude: latitude,
+        longitude: longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }}
+      >
+        <Marker coordinate={{ latitude, longitude }} />
+      </MapView>
+    ) : null}
+
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <View style={styles.commentSection}>
@@ -461,6 +484,10 @@ const styles = StyleSheet.create({
   commentButton: {
     marginTop: 15,
     backgroundColor: "#FF6347",
+  },
+  map: {
+    height: 300,  // Set the height of the map
+    marginVertical: 15,
   },
 });
 

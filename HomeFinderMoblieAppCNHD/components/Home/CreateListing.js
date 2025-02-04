@@ -8,6 +8,7 @@ import { Picker } from '@react-native-picker/picker'; // Để sử dụng Picke
 import MyStyles from "../../styles/MyStyles";
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker for Google Maps
 
+
 const CreateListing = ({ navigation }) => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");

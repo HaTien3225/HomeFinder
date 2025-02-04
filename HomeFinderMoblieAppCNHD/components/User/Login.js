@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useContext, useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import APIs, { endpoints } from "../../configs/APIs";
 import { MyDispatchContext } from "../../configs/MyUserContext";
@@ -80,7 +80,7 @@ const Login = () => {
     } catch (ex) {
       console.error("Login Error:", ex.response?.data || ex.message);
 
-      if (ex.response?.status === 401) {
+      if (ex.response?.data?.error === "invalid_grant") {
         setError("Tên đăng nhập hoặc mật khẩu không đúng.");
       } else {
         setError("Lỗi kết nối đến máy chủ. Vui lòng thử lại.");
@@ -91,15 +91,15 @@ const Login = () => {
   };
 
   return (
-    <View style={MyStyles.container}>
-      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
+    <View style={styles.container}>
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       {/* Tạo input cho tên đăng nhập */}
       <TextInput
         secureTextEntry={users.username.secureTextEntry}
         value={user.username}
         onChangeText={(text) => change(text, "username")}
-        style={MyStyles.margin}
+        style={styles.input}
         placeholder={users.username.title}
         right={<TextInput.Icon icon={users.username.icon} />}
       />
@@ -109,7 +109,7 @@ const Login = () => {
         secureTextEntry={users.password.secureTextEntry}
         value={user.password}
         onChangeText={(text) => change(text, "password")}
-        style={MyStyles.margin}
+        style={styles.input}
         placeholder={users.password.title}
         right={
           <TextInput.Icon
@@ -124,14 +124,66 @@ const Login = () => {
         mode="contained"
         onPress={login}
         disabled={loading}
-        style={MyStyles.margin}
+        style={styles.button}
       >
         ĐĂNG NHẬP
       </Button>
 
-      {loading && <Text>Đang đăng nhập...</Text>}
+      {loading && <Text style={styles.loadingText}>Đang đăng nhập...</Text>}
+
+      {/* Chuyển hướng đến trang đăng ký nếu chưa có tài khoản */}
+      <View style={styles.signupContainer}>
+        <Text style={styles.signupText}>Chưa có tài khoản? </Text>
+        <TouchableOpacity onPress={() => nav.navigate("register")}>
+          <Text style={styles.signupLink}>Đăng ký ngay</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  input: {
+    marginBottom: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    height: 50,
+    paddingLeft: 15,
+  },
+  button: {
+    backgroundColor: "#FF6347",
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  loadingText: {
+    textAlign: "center",
+    marginTop: 10,
+  },
+  signupContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  signupText: {
+    fontSize: 16,
+  },
+  signupLink: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FF6347",
+  },
+});
 
 export default Login;

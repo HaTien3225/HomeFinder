@@ -246,6 +246,7 @@ const Home = () => {
                         params={{ listingId: item.id }}
                     />
                 )}
+                showsVerticalScrollIndicator={false} 
             />
         </View>
     );
