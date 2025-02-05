@@ -130,13 +130,11 @@ const handleUnfollow = async () => {
 
     console.log("Gửi yêu cầu hủy theo dõi với hostId: ", hostId);
 
-    const response = await fetch(`${API_URL}/follow/unfollow/`, {
+    const response = await fetch(`${API_URL}/follow/unfollow/?host=${hostId}`, { // ✅ Gửi hostId qua query params
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${userToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ host: hostId })  // Gửi hostId trong body
+      }
     });
 
     if (!response.ok) {
@@ -145,7 +143,7 @@ const handleUnfollow = async () => {
     }
 
     setIsFollowing(false);
-    setFollowId(null);  // Xóa ID của follow sau khi hủy theo dõi
+    setFollowId(null);
     Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
   } catch (error) {
     console.error("Lỗi khi gửi yêu cầu hủy theo dõi:", error);
