@@ -24,7 +24,6 @@ const ListingDetail = ({ route }) => {
       setHostId(item.host?.id);  // Gán ID chủ nhà trọ
       setLatitude(item.latitude); // Gán latitude từ item
       setLongitude(item.longitude); // Gán longitude từ item
-     
       fetchComments();
       checkFollowStatus();
     }
@@ -49,7 +48,12 @@ const ListingDetail = ({ route }) => {
 const checkFollowStatus = async () => {
   try {
     const userToken = await AsyncStorage.getItem("token");
-    if (!userToken || !hostId) return;
+    if (!userToken || !hostId) {
+      console.warn("Thiếu token hoặc hostId");
+      return;
+    }
+
+    console.log("📡 Kiểm tra trạng thái theo dõi...");
 
     const response = await fetch(`${API_URL}/follow/check_follow/?host=${hostId}`, {
       method: 'GET',
@@ -59,23 +63,20 @@ const checkFollowStatus = async () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Lỗi khi kiểm tra trạng thái theo dõi.');
+      throw new Error("Không thể kiểm tra trạng thái theo dõi.");
     }
 
     const data = await response.json();
-    if (data.followed) {
-      setIsFollowing(true);
-      setFollowId(data.followId);  // Lưu lại ID của follow để sử dụng cho việc hủy theo dõi
-    } else {
-      setIsFollowing(false);
-    }
+    console.log("📌 Trạng thái từ API:", data);
+
+    // Cập nhật state ngay khi API trả về dữ liệu
+    setIsFollowing(data.followed);
+    setFollowId(data.followId || null);
   } catch (error) {
-    console.error("Lỗi khi kiểm tra trạng thái theo dõi:", error);
-    Alert.alert("Lỗi", error.message || "Không thể kiểm tra trạng thái theo dõi.");
+    console.error("⚠️ Lỗi khi kiểm tra trạng thái theo dõi:", error);
+    Alert.alert("Lỗi", "Không thể kiểm tra trạng thái theo dõi.");
   }
 };
-
 const handleFollow = async () => {
   try {
     const userToken = await AsyncStorage.getItem("token");
@@ -85,10 +86,11 @@ const handleFollow = async () => {
     }
 
     if (!hostId) {
-      console.error("Không tìm thấy hostId.");
-      Alert.alert("Lỗi", "Không thể tìm thấy thông tin chủ nhà.");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin chủ nhà.");
       return;
     }
+
+    console.log("📡 Gửi yêu cầu theo dõi:", { host: hostId });
 
     const response = await fetch(`${API_URL}/follow/follow/`, {
       method: 'POST',
@@ -96,24 +98,27 @@ const handleFollow = async () => {
         'Authorization': `Bearer ${userToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ host: hostId })  // Gửi hostId trong body
+      body: JSON.stringify({ host: hostId }) 
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || "Không thể theo dõi. Vui lòng thử lại!");
+      throw new Error(errorData.error || "Không thể theo dõi.");
     }
 
     const followData = await response.json();
+    console.log("✅ Follow thành công:", followData);
+
     setIsFollowing(true);
-    setFollowId(followData.id);  // Lưu lại ID của follow
-    Alert.alert("Thông báo", "Bạn đã theo dõi chủ nhà!");
+    setFollowId(followData.id);
+
+    // Gọi lại checkFollowStatus để chắc chắn cập nhật đúng từ server
+    setTimeout(() => checkFollowStatus(), 500);
   } catch (error) {
-    console.error("Lỗi khi theo dõi:", error);
-    Alert.alert("Lỗi", error.message || "Không thể theo dõi. Vui lòng thử lại!");
+    console.error("⚠️ Lỗi khi theo dõi:", error);
+    Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
   }
 };
-
 const handleUnfollow = async () => {
   try {
     const userToken = await AsyncStorage.getItem("token");
@@ -123,14 +128,13 @@ const handleUnfollow = async () => {
     }
 
     if (!hostId) {
-      console.error("Không tìm thấy hostId để hủy theo dõi.");
-      Alert.alert("Lỗi", "Không thể hủy theo dõi vì không tìm thấy thông tin chủ nhà.");
+      Alert.alert("Lỗi", "Không thể hủy theo dõi.");
       return;
     }
 
-    console.log("Gửi yêu cầu hủy theo dõi với hostId: ", hostId);
+    console.log("📡 Gửi yêu cầu hủy theo dõi:", { host: hostId });
 
-    const response = await fetch(`${API_URL}/follow/unfollow/?host=${hostId}`, { // ✅ Gửi hostId qua query params
+    const response = await fetch(`${API_URL}/follow/unfollow/?host=${hostId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${userToken}`,
@@ -138,18 +142,21 @@ const handleUnfollow = async () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Không thể hủy theo dõi. Vui lòng thử lại.");
+      throw new Error("Không thể hủy theo dõi.");
     }
 
+    console.log("✅ Hủy theo dõi thành công");
     setIsFollowing(false);
     setFollowId(null);
-    Alert.alert("Thông báo", "Bạn đã hủy theo dõi chủ nhà.");
+
+    // Kiểm tra lại trạng thái sau khi hủy
+    setTimeout(() => checkFollowStatus(), 500);
   } catch (error) {
-    console.error("Lỗi khi gửi yêu cầu hủy theo dõi:", error);
-    Alert.alert("Lỗi", error.message || "Không thể hủy theo dõi. Vui lòng kiểm tra kết nối mạng và thử lại.");
+    console.error("⚠️ Lỗi khi hủy theo dõi:", error);
+    Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại!");
   }
 };
+
 
 
   const fetchComments = async () => {
@@ -340,12 +347,20 @@ const handleUnfollow = async () => {
 
           {/* Nút theo dõi / hủy theo dõi */}
           <Button 
-            mode="contained" 
-            style={styles.followButton}
-            onPress={isFollowing ? handleUnfollow : handleFollow}
-          >
-            {isFollowing ? "Hủy theo dõi" : "Theo dõi"}
-          </Button>
+  mode="contained" 
+  style={styles.followButton}
+  onPress={async () => {
+    if (isFollowing) {
+      await handleUnfollow();
+    } else {
+      await handleFollow();
+    }
+    checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+  }}
+>
+  {isFollowing ? "Hủy theo dõi" : "Theo dõi"}
+</Button>
+
         </Card.Content>
       </Card>
 
