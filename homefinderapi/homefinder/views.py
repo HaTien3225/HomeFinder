@@ -13,6 +13,7 @@ from .serializers import UserSerializer, ListingSerializer, FollowSerializer, Co
     RoomRequestSerializer, ChatSerializer, StatisticsSerializer
 
 
+
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
@@ -142,9 +143,16 @@ class ListingViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """
-        Lưu listing với host là người dùng hiện tại.
+        Lưu listing với host là người dùng hiện tại và gửi email cho những người theo dõi.
         """
         serializer.save(host=self.request.user)
+
+        # # Sau khi tạo xong, gửi email tới những người theo dõi chủ nhà
+        # listing = serializer.instance
+        # listing.send_email_to_followers()
+
+        # return Response({"message": "Listing đã được tạo và thông báo đã được gửi tới những người theo dõi."})
+
 
 
 class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
@@ -226,25 +234,21 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return Response({"message": "Bình luận đã bị xóa"})
 
 
-class FollowViewSet(viewsets.ViewSet, generics.ListAPIView):
+class FollowViewSet(viewsets.ViewSet):
     """
     A viewset for creating and listing follows.
     """
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     pagination_class = paginators.ItemPaginator
-    permission_classes = [IsAuthenticated]  # Chỉ cho phép những người đã đăng nhập
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Lưu đối tượng Follow với user hiện tại
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['POST'])
-    def follow(self, request):
-        """
-        API để theo dõi chủ nhà trọ.
-        """
-        host_id = request.data.get('host_id')
+    @action(detail=False, methods=['GET'])
+    def check_follow(self, request):
+        host_id = request.query_params.get('host')
 
         if not host_id:
             return Response({"error": "Host ID is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -254,21 +258,34 @@ class FollowViewSet(viewsets.ViewSet, generics.ListAPIView):
         except User.DoesNotExist:
             return Response({"error": "Host not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Kiểm tra nếu người dùng đã theo dõi host này
+        follow = Follow.objects.filter(user=request.user, host=host).first()
+        if follow:
+            return Response({"followed": True, "followId": follow.id}, status=status.HTTP_200_OK)
+        else:
+            return Response({"followed": False}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['POST'])
+    def follow(self, request):
+        host_id = request.data.get('host')
+
+        if not host_id:
+            return Response({"error": "Host ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            host = User.objects.get(id=host_id)
+        except User.DoesNotExist:
+            return Response({"error": "Host not found."}, status=status.HTTP_404_NOT_FOUND)
+
         existing_follow = Follow.objects.filter(user=request.user, host=host).first()
         if existing_follow:
             return Response({"message": "You are already following this host."}, status=status.HTTP_200_OK)
 
-        # Tạo đối tượng Follow mới
         follow = Follow.objects.create(user=request.user, host=host)
         return Response({"message": "You are now following this host."}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['DELETE'])
     def unfollow(self, request):
-        """
-        API để hủy theo dõi chủ nhà trọ.
-        """
-        host_id = request.data.get('host_id')
+        host_id = request.query_params.get('host')
 
         if not host_id:
             return Response({"error": "Host ID is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -278,15 +295,12 @@ class FollowViewSet(viewsets.ViewSet, generics.ListAPIView):
         except User.DoesNotExist:
             return Response({"error": "Host not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Kiểm tra nếu người dùng có đang theo dõi chủ nhà này không
         follow = Follow.objects.filter(user=request.user, host=host).first()
         if not follow:
             return Response({"error": "You are not following this host."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Hủy theo dõi
         follow.delete()
         return Response({"message": "You have unfollowed this host."}, status=status.HTTP_204_NO_CONTENT)
-
 
 # Notification ViewSet
 class NotificationViewSet(viewsets.ViewSet, generics.ListAPIView):

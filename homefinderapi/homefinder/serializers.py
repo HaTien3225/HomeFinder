@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import User, Listing, Follow, Comment, Notification, Chat, RoomRequest, Statistics
 
 
+
 from rest_framework import serializers
 from .models import User
 
@@ -80,11 +81,6 @@ class ListingSerializer(serializers.ModelSerializer):
             data['image'] = instance.image.url if hasattr(instance.image, 'url') else None
 
         return data
-
-
-
-
-
 
 
 class FollowSerializer(serializers.ModelSerializer):

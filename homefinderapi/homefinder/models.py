@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from ckeditor.fields import RichTextField
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 
 class UserManager(BaseUserManager):
@@ -50,6 +54,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     address = models.CharField(max_length=255, blank=True, null=True)
+    last_login = models.DateTimeField(auto_now=True, null=True)  # Cung cấp giá trị mặc định
+
 
     # Multiple image fields for user
     image_1 = CloudinaryField('image_1', null=True, blank=True)
@@ -91,6 +97,20 @@ class Listing(models.Model):
 
     def __str__(self):
         return self.title
+
+    def send_email_to_followers(self):
+        followers = self.host.followers.all()  # Lấy tất cả người theo dõi chủ nhà
+
+        subject = f'Có listing mới từ {self.host.username}'
+        message = f'Chào bạn, {self.host.username} vừa đăng một listing mới. Hãy đến xem ngay!'
+        from_email = settings.EMAIL_HOST_USER
+
+        for follower in followers:
+            # Gửi email cho từng người theo dõi
+            send_mail(subject, message, from_email, [follower.user.email])
+
+
+
 
 
 class Follow(BaseModel):

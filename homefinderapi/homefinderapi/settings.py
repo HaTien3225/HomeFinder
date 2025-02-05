@@ -56,7 +56,6 @@ REST_FRAMEWORK = {
 
 CKEDITOR_UPLOAD_PATH = "uploads/"  # Bạn có thể thay đổi đường dẫn này nếu cần.
 
-
 CKEDITOR_CONFIGS = {
     'default': {
         'toolbar': 'Full',
@@ -66,7 +65,6 @@ CKEDITOR_CONFIGS = {
         'filebrowserImageUploadUrl': '/ckeditor/upload/',  # Đảm bảo URL upload hình ảnh
     },
 }
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -166,8 +164,9 @@ cloudinary.config(
     api_secret="QzsEGTvDRgwUwIuDm1GZEIPHK18",  # Click 'View API Keys' above to copy your API secret
     secure=True
 )
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
 
-CLIENT_ID='MdzBsYRoQzBAsB9D6lciSZrtfsHO6MvwrVneZZLu'
-CLIENT_SECRET='DOpA0BBOr1slSZ5RMbZH8lZ9CnFT7CUKS6433rzVal9fq6TaZAf5MTyUu8u7boJOy2nCqZlqOYDi6ggc2MdRqWGDqXpH75eoVCxzCX6LyL7a0lccdIeDiqZJQt3whBc9'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+OAUTH2_PROVIDER = {'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'}
+
+CLIENT_ID = 'Xg35Jk4OJyJp5W1tKH3vRX9znJUoMUbfiyHqNzRe'
+CLIENT_SECRET = 'HXmngeKB8IbQ5vVOuO6OimrPATQBYwqiaOejW0eu0pNpzfEcklE53pIp1SRRfspgRQmKYnlavGevGyzVfBDOHtV1DkwZHVhsaGnTIxqk3qaMlZvEUVjNJH3U1P8jAqlo'
