@@ -32,6 +32,7 @@ const StackNavigator = () => {
       <Stack.Screen name="ListingDetail" component={ListingDetail} />
       <Stack.Screen name="PostNotificationScreen" component={PostNotificationScreen} />
       <Stack.Screen name="TenantRequests" component={TenantRequestsScreen} options={{ title: "Danh sách tìm phòng" }} /> 
+   
 
     
     </Stack.Navigator>
@@ -53,7 +54,7 @@ const TabNavigator = () => {
           name="TenantRequests"
           component={TenantRequestsStack} 
           options={{ title: "Danh sách tìm phòng", tabBarIcon: () => <Icon source="magnify" size={20} /> }}
-/>
+     />
 
    
     {user === null ? (
