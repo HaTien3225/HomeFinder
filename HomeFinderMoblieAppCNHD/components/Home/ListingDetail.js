@@ -24,8 +24,8 @@ const ListingDetail = ({ route }) => {
       setHostId(item.host?.id);  // Gán ID chủ nhà trọ
       setLatitude(item.latitude); // Gán latitude từ item
       setLongitude(item.longitude); // Gán longitude từ item
-      fetchComments();
       checkFollowStatus();
+      fetchComments();   
     }
   }, [item]);
   
@@ -46,39 +46,35 @@ const ListingDetail = ({ route }) => {
 };
 
 const checkFollowStatus = async () => {
-  try {
-    const userToken = await AsyncStorage.getItem("token");
-    if (!userToken || !hostId) {
+  const userToken = await AsyncStorage.getItem("token");
+  if (!userToken || !item.host?.id) {
       console.warn("Thiếu token hoặc hostId");
       return;
-    }
+  }
 
-    console.log("📡 Kiểm tra trạng thái theo dõi...");
+  console.log("📡 Kiểm tra trạng thái theo dõi...");
 
-    const response = await fetch(`${API_URL}/follow/check_follow/?host=${hostId}`, {
+  const response = await fetch(`${API_URL}/follow/check_follow/?host=${item.host?.id}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${userToken}`,
+          'Authorization': `Bearer ${userToken}`,
       }
-    });
+  });
 
-    if (!response.ok) {
+  if (!response.ok) {
       throw new Error("Không thể kiểm tra trạng thái theo dõi.");
-    }
-
-    const data = await response.json();
-    console.log("📌 Trạng thái từ API:", data);
-
-    // Cập nhật state ngay khi API trả về dữ liệu
-    setIsFollowing(data.followed);
-    setFollowId(data.followId || null);
-  } catch (error) {
-    console.error("⚠️ Lỗi khi kiểm tra trạng thái theo dõi:", error);
-    Alert.alert("Lỗi", "Không thể kiểm tra trạng thái theo dõi.");
   }
+
+  const data = await response.json();
+  console.log("📌 Trạng thái từ API:", data);
+
+  // Cập nhật state ngay khi API trả về dữ liệu
+  setIsFollowing(data.followed);
+  setFollowId(data.followId || null);
 };
+
 const handleFollow = async () => {
-  try {
+  
     const userToken = await AsyncStorage.getItem("token");
     if (!userToken) {
       Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
@@ -113,14 +109,11 @@ const handleFollow = async () => {
     setFollowId(followData.id);
 
     // Gọi lại checkFollowStatus để chắc chắn cập nhật đúng từ server
-    setTimeout(() => checkFollowStatus(), 500);
-  } catch (error) {
-    console.error("⚠️ Lỗi khi theo dõi:", error);
-    Alert.alert("Lỗi", "Không thể theo dõi. Vui lòng thử lại!");
-  }
+     checkFollowStatus();
+  
 };
 const handleUnfollow = async () => {
-  try {
+  
     const userToken = await AsyncStorage.getItem("token");
     if (!userToken) {
       Alert.alert("Lỗi", "Bạn chưa đăng nhập.");
@@ -150,11 +143,7 @@ const handleUnfollow = async () => {
     setFollowId(null);
 
     // Kiểm tra lại trạng thái sau khi hủy
-    setTimeout(() => checkFollowStatus(), 500);
-  } catch (error) {
-    console.error("⚠️ Lỗi khi hủy theo dõi:", error);
-    Alert.alert("Lỗi", "Không thể hủy theo dõi. Vui lòng thử lại!");
-  }
+     checkFollowStatus() ;
 };
 
 
@@ -347,19 +336,24 @@ const handleUnfollow = async () => {
 
           {/* Nút theo dõi / hủy theo dõi */}
           <Button 
-  mode="contained" 
-  style={styles.followButton}
-  onPress={async () => {
-    if (isFollowing) {
-      await handleUnfollow();
-    } else {
-      await handleFollow();
-    }
-    checkFollowStatus(); // Đảm bảo UI cập nhật đúng
-  }}
->
-  {isFollowing ? "Hủy theo dõi" : "Theo dõi"}
-</Button>
+            mode="contained" 
+            style={[styles.followButton, { backgroundColor: "#FF4500" }]}
+            onPress={async () => {
+              checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+              if (isFollowing===true) {
+                checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+                await handleUnfollow();
+                checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+              } else {
+                checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+                await handleFollow();
+                checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+              }
+              checkFollowStatus(); // Đảm bảo UI cập nhật đúng
+            }}
+          >
+            {isFollowing ? "Hủy theo dõi" : "Theo dõi"}
+          </Button>
 
         </Card.Content>
       </Card>

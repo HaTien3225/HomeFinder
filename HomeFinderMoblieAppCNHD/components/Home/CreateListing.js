@@ -235,7 +235,18 @@ const CreateListing = ({ navigation }) => {
                     <Picker.Item label="5 người" value="5" />
                 </Picker>
 
-                <Text>Chọn vị trí:</Text>
+                <TouchableOpacity onPress={pickImage} style={{ padding: 10 }}>
+                    <Text style={{ fontSize: 16 }}>
+                        {image ? "Ảnh đã chọn:" : "Chọn ảnh:"}
+                    </Text>
+                </TouchableOpacity>
+
+                {image && (
+                    <Image source={{ uri: image }} style={{ width: 100, height: 100, marginTop: 10 }} />
+                )}
+
+                <Text style={{ fontSize: 16}}> Chọn vị trí: </Text>
+
                 <MapView
                     style={{ width: '100%', height: 250 }}
                     region={region}
@@ -246,18 +257,15 @@ const CreateListing = ({ navigation }) => {
                     <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} />
                 </MapView>
 
-                <TouchableOpacity onPress={pickImage}>
-                    <Text>{image ? "Ảnh đã chọn" : "Chọn ảnh"}</Text>
-                </TouchableOpacity>
-
-                {image && (
-                    <Image source={{ uri: image }} style={{ width: 100, height: 100, marginTop: 10 }} />
-                )}
-
                 <Button
                     mode="contained"
                     onPress={createListing}
-                    style={[MyStyles.button, { backgroundColor: '#56CCF2' }]}
+                    style={[MyStyles.button, { 
+                        backgroundColor: '#FF4500',  // Màu cam đỏ
+                        paddingVertical: 8,   // Giảm chiều cao
+                        paddingHorizontal: 20, // Giảm chiều rộng
+                        borderRadius: 30, // Làm nút tròn hơn
+                    }]}
                 >
                     Đăng phòng
                 </Button>
